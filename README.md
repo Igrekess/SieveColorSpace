@@ -10,15 +10,11 @@ a mathematical framework based on prime gap dynamics.
 
 All ratios and structures are derived.
 
+[**For a quick online demo :**](https://igrekess.github.io/SimplexColorSpace/scs_demo.html)[ Click here](https://igrekess.github.io/SimplexColorSpace/scs_demo.html)
+
 **New (April 2026):** The SCS00 formula (CIEDE2000 + Fisher-Bernoulli geodesic)
 **surpasses CIEDE2000** on COMBVD (r = 0.893 vs 0.878, p < 0.0001).
 The article is now self-contained with a full mathematical appendix.
-
-## Interactive demo
-
-Explore the geometry and applications of SCS interactively:
-
-- [Live SCS demo on GitHub Pages](https://igrekess.github.io/SimplexColorSpace/scs_demo.html)
 
 ## Install
 

@@ -363,14 +363,8 @@ details.theory-panel summary::-webkit-details-marker { display: none; }
   color: var(--gold);
 }
 .xfer-stage-grid {
-  display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.9fr);
+  display: grid; grid-template-columns: 1fr;
   gap: 1rem;
-}
-.xfer-stage-grid .panel.featured {
-  border-color: var(--gold-dim);
-}
-.xfer-stage-grid .panel.reference h3 {
-  color: var(--text-dim);
 }
 .xfer-flow-title {
   margin-top: 1rem; margin-bottom: 0.6rem;
@@ -1348,13 +1342,9 @@ details.theory-panel summary::-webkit-details-marker { display: none; }
   <div class="xfer-flow-title" data-i18n="m7_step1">1. Grade the source raw in CIE/HSL</div>
   <div class="xfer-grade-workbench">
 	    <div class="xfer-stage-grid">
-	      <div class="panel featured">
+	      <div class="panel" style="border-color:var(--gold-dim);">
 	        <h3 data-i18n="m7_source_grade">Source raw after CIE/HSL grade</h3>
 	        <canvas class="xfer-canvas" id="m7-source-grade"></canvas>
-	      </div>
-	      <div class="panel reference">
-	        <h3 data-i18n="m7_source_raw">Source raw before grade</h3>
-	        <canvas class="xfer-canvas" id="m7-source-raw"></canvas>
 	      </div>
 	    </div>
 	    <div class="panel xfer-grade-panel" style="border-color:var(--gold-dim);">
@@ -4010,6 +4000,7 @@ function m7LoadImage(path) {
 
 function m7DrawOriginal(canvasId, prep) {
   const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   canvas.width = prep.w;
   canvas.height = prep.h;
@@ -4095,7 +4086,6 @@ function m7Render() {
   try {
     const look = m7CurrentLook();
     const transferMap = m7BuildTransferMap(m7.source, m7.target, look);
-    m7DrawOriginal('m7-source-raw', m7.source);
     m7DrawSourceGrade('m7-source-grade', m7.source, transferMap);
     m7DrawSourceGrade('m7-source-grade-ref', m7.source, transferMap);
     m7DrawOriginal('m7-target-raw', m7.target);

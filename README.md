@@ -1,10 +1,9 @@
-# SCS — Sieve Color Space
+# PT Sieve Color Space (SCS)
 
 [Francais](README_FR.md)
 
 A first-principles color space derived from
-[Persistence Theory](https://github.com/yan-senez/persistence-theory),
-a mathematical framework based on prime gap dynamics.
+[Persistence Theory](https://zenodo.org/records/19520809), a mathematical framework based on prime gap dynamics.
 
 **Single input:** `s = 1/2`. **Zero adjustable parameters.**
 
@@ -14,7 +13,10 @@ All ratios and structures are derived.
 
 **New (April 2026):** The SCS00 formula (CIEDE2000 + Fisher-Bernoulli geodesic)
 **surpasses CIEDE2000** on COMBVD (r = 0.893 vs 0.878, p < 0.0001).
+
 The article is now self-contained with a full mathematical appendix.
+Read the [English PDF](article/PT_COLOR.pdf) or the [French PDF](article/PT_COLOR_FR.pdf).
+
 
 ## Install
 

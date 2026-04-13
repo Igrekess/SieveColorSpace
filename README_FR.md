@@ -14,7 +14,11 @@ du crible vers le SI ; tous les rapports et structures sont derives.
 
 **Nouveau (avril 2026) :** La formule SCS00 (CIEDE2000 + geodesique de Fisher-Bernoulli)
 **surpasse CIEDE2000** sur COMBVD (r = 0,893 vs 0,878, p < 0,0001).
+
 L'article est desormais autonome avec un appendice mathematique complet.
+- [French PDF](article/PT_COLOR_FR.pdf)
+- [English PDF](article/PT_COLOR.pdf)
+
 
 ## Installation
 

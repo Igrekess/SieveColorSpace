@@ -149,12 +149,12 @@ s = 1/2 → T₁ → T₃ = antidiag(1,1)
 
 ## References
 
-Y. Senez, *"The Sieve Color Space: A First-Principles Color Space
-from the Sieve of Eratosthenes"* (2026).
+Y. Senez, [*"The Sieve Color Space: A First-Principles Color Space
+from the Sieve of Eratosthenes"* (2026).](article/PT_COLOR.pdf)
 
-Y. Senez, *"Persistence Theory: Mathematical Foundations of Prime Gap
-Dynamics"*, preprint (2026).
+Y. Senez, [*"Persistence Theory: Mathematical Foundations of Prime Gap
+Dynamics"*, preprint (2026).](https://zenodo.org/records/19520809)
 
 ## License
 
-MIT — Yan Senez — [www.dityan.com](https://www.dityan.com)
+MIT — Yan Senez 

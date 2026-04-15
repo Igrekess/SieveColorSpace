@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCS — Module 01 - Read a Color in lRGB Mode</title>
+<style>
+:root{
+  --bg:#0a0a0a; --surface:#141414; --surface2:#1e1e1e; --border:#2a2a2a;
+  --text:#e0e0e0; --text-dim:#8a8a8a; --gold:#c8a84e; --gold-dim:#8a7234;
+  --blue:#6688bb; --radius:12px; --maxw:1100px;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:0 16px 40px;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+header,main{max-width:var(--maxw);margin:0 auto}
+header{padding:28px 0 18px;border-bottom:1px solid var(--border)}
+h1{margin:0;font-size:1.9rem;letter-spacing:-0.02em}
+h1 span{color:var(--gold)}
+.tagline{margin:6px 0 0;color:var(--text-dim)}
+.header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.module{margin-top:28px;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px}
+.module-header{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.module-num{font-size:2rem;font-weight:800;line-height:1;color:var(--gold-dim);opacity:.55}
+.module-desc{margin:0 0 18px;color:var(--text-dim);line-height:1.55}
+.btn{appearance:none;border:1px solid var(--border);cursor:pointer;background:var(--surface2);color:var(--text-dim);padding:10px 16px;font-weight:600;border-radius:10px}
+.btn.active,.btn:hover{border-color:var(--gold);color:#fff}
+.lang-toggle{display:flex;gap:6px}
+.lang-btn{padding:8px 12px;font-size:.82rem}
+.lang-btn.active{border-color:var(--gold);color:var(--gold)}
+.panel{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+details.theory-panel{margin-top:1.2rem;border-top:1px solid var(--border);padding-top:.8rem}
+details.theory-panel summary{font-size:.8rem;color:var(--gold-dim);cursor:pointer;text-transform:uppercase;letter-spacing:.08em;list-style:none}
+details.theory-panel summary::before{content:"▸ "}
+details.theory-panel[open] summary::before{content:"▾ "}
+details.theory-panel summary::-webkit-details-marker{display:none}
+.theory-content{margin-top:.8rem;padding:1rem;background:#080808;border-radius:var(--radius);font-size:.85rem;line-height:1.7;color:var(--text-dim)}
+.theory-content code{font-family:'SF Mono','Fira Code',monospace;color:var(--gold);font-size:.85em}
+.layout{display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start}
+.swatch{width:100%;height:180px;border-radius:var(--radius);border:1px solid var(--border);margin:.8rem 0}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:.6rem;margin-top:.6rem;font-size:.78rem;color:var(--text-dim)}
+.meta code,.formula-value,.metric-card-value,.slider-val{font-family:'SF Mono','Fira Code',monospace}
+.formula-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem}
+.formula-label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:.4rem}
+.formula-value{font-size:1rem;color:var(--text);line-height:1.5}
+.slider-stack{display:grid;gap:.8rem}
+.slider-block label{display:block;font-size:.8rem;color:var(--text-dim);margin-bottom:.32rem}
+.slider-row{display:grid;grid-template-columns:1fr 72px;gap:.6rem;align-items:center}
+.slider-val{text-align:right;color:var(--gold);font-variant-numeric:tabular-nums}
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:999px;background:var(--surface2);outline:none}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);border:2px solid var(--bg);cursor:pointer}
+input[type="range"]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--gold);border:2px solid var(--bg);cursor:pointer}
+.preset-grid{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:1rem}
+.preset-btn{padding:6px 10px;font-size:.76rem}
+.note{font-size:.78rem;color:var(--text-dim);margin-top:.8rem;line-height:1.55}
+.channel-bars{display:grid;gap:.65rem}
+.channel-row{display:grid;grid-template-columns:190px 1fr 72px;gap:.6rem;align-items:center}
+.channel-label{font-size:.8rem;color:var(--text-dim)}
+.channel-track{height:12px;border-radius:999px;background:var(--surface2);overflow:hidden}
+.channel-fill{height:100%;border-radius:999px;transition:width .2s ease-out}
+.channel-fill.c3{background:#d67c59} .channel-fill.c5{background:#7fb56e} .channel-fill.c7{background:#6e8ff0}
+.channel-fill.csat{background:var(--gold)} .channel-fill.clum{background:var(--blue)} .channel-fill.ctotal{background:linear-gradient(90deg,var(--gold),var(--blue))}
+.channel-val{font-size:.8rem;color:var(--gold);text-align:right;font-variant-numeric:tabular-nums}
+.metric-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.8rem;margin-top:1rem}
+.metric-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:.8rem .9rem}
+.metric-card-label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:.35rem}
+.metric-card-value{font-size:1rem;color:var(--gold);font-variant-numeric:tabular-nums}
+@media (max-width:760px){.layout{grid-template-columns:1fr}.metric-cards{grid-template-columns:1fr 1fr}.channel-row{grid-template-columns:140px 1fr 64px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-row">
+    <div>
+      <h1><span>SCS</span> — <span data-i18n="headerTitle">Module 01 - Read a Color in SCS</span></h1>
+      <p class="tagline" data-i18n="siteTagline">Pedagogical SCS controls.</p>
+    </div>
+    <div class="lang-toggle">
+      <button class="btn lang-btn" id="lang-fr">FR</button>
+      <button class="btn lang-btn" id="lang-en">EN</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="module">
+  <div class="module-header">
+    <span class="module-num">01</span>
+    <h2 data-i18n="title">Read a Color with the ℓRGB Mode</h2>
+  </div>
+  <p class="module-desc" data-i18n="desc">R, G, B choose a simplex direction. Saturation moves away from gray along that direction. Luminance is relative to the maximum allowed for that direction.</p>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="swatch" id="swatch"></div>
+      <div class="meta"><span data-i18n="hex">Hex</span><code id="hex">#000000</code></div>
+
+      <div class="slider-stack" style="margin-top:1rem">
+        <div class="slider-block">
+          <label for="lumSlider" data-i18n="lum_slider">Luminance ℓ / ℓmax(direction)</label>
+          <div class="slider-row">
+            <input type="range" id="lumSlider" min="0" max="100" value="78">
+            <div class="slider-val" id="lumSliderVal">78.0%</div>
+          </div>
+        </div>
+
+        <div class="slider-block">
+          <label for="rSlider" data-i18n="r_weight">R (π₃)</label>
+          <div class="slider-row">
+            <input type="range" id="rSlider" min="0" max="100" value="50">
+            <div class="slider-val" id="rSliderVal">50</div>
+          </div>
+        </div>
+
+        <div class="slider-block">
+          <label for="gSlider" data-i18n="g_weight">V (π₅)</label>
+          <div class="slider-row">
+            <input type="range" id="gSlider" min="0" max="100" value="30">
+            <div class="slider-val" id="gSliderVal">30</div>
+          </div>
+        </div>
+
+        <div class="slider-block">
+          <label for="bSlider" data-i18n="b_weight">B (π₇)</label>
+          <div class="slider-row">
+            <input type="range" id="bSlider" min="0" max="100" value="20">
+            <div class="slider-val" id="bSliderVal">20</div>
+          </div>
+        </div>
+
+        <div class="slider-block">
+          <label for="satSlider" data-i18n="sat_slider">Saturation / Smax(direction)</label>
+          <div class="slider-row">
+            <input type="range" id="satSlider" min="0" max="100" value="72">
+            <div class="slider-val" id="satSliderVal">72.0%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="preset-grid">
+        <button class="btn preset-btn" data-hex="#ff0000" data-i18n="preset_red">Red</button>
+        <button class="btn preset-btn" data-hex="#00ff00" data-i18n="preset_green">Green</button>
+        <button class="btn preset-btn" data-hex="#0000ff" data-i18n="preset_blue">Blue</button>
+        <button class="btn preset-btn" data-hex="#00ffff" data-i18n="preset_cyan">Cyan</button>
+        <button class="btn preset-btn" data-hex="#ff00ff" data-i18n="preset_magenta">Magenta</button>
+        <button class="btn preset-btn" data-hex="#ffff00" data-i18n="preset_yellow">Yellow</button>
+        <button class="btn preset-btn" data-hex="#000000" data-i18n="preset_black">Black</button>
+        <button class="btn preset-btn" data-hex="#767676" data-i18n="preset_gray18">18% gray</button>
+        <button class="btn preset-btn" data-hex="#808080" data-i18n="preset_gray50">Neutral gray</button>
+        <button class="btn preset-btn" data-hex="#ffffff" data-i18n="preset_white">White</button>
+        <button class="btn preset-btn" data-hex="#ffa600" data-i18n="preset_orange">Orange</button>
+        <button class="btn preset-btn" data-hex="#7f00ff" data-i18n="preset_violet">Violet</button>
+        <button class="btn preset-btn" data-hex="#f5c2a6" data-i18n="preset_skin_light">Light skin</button>
+        <button class="btn preset-btn" data-hex="#8d5a3a" data-i18n="preset_skin_dark">Dark skin</button>
+        <button class="btn preset-btn" data-hex="#3a6ea5" data-i18n="preset_sky">Sky blue</button>
+        <button class="btn preset-btn" data-hex="#2f6b3b" data-i18n="preset_foliage">Foliage</button>
+      </div>
+
+      <p class="note" data-i18n-html="left_note">This mapping is intentionally constrained: luminance is relative to what the chosen simplex direction can actually display inside sRGB.</p>
+    </div>
+
+    <div>
+      <div class="formula-box">
+        <span class="formula-label" data-i18n="simplex_form">Forme simplex (ℓ ; R, G, B)</span>
+        <div class="formula-value" id="simplexFormula"></div>
+        <p class="note" data-i18n="simplex_note">R, G, B are normalized simplex weights. They define a chromatic direction, not display RGB values.</p>
+      </div>
+
+      <div class="formula-box">
+        <span class="formula-label" data-i18n="polar_form">Forme polaire&nbsp;(ℓ ; S, θ)</span>
+        <div class="formula-value" id="polarFormula"></div>
+        <p class="note" data-i18n="polar_note">S is shown here as a relative saturation along the chosen simplex direction.</p>
+      </div>
+
+      <div class="panel">
+        <div class="channel-bars">
+          <div class="channel-row"><div class="channel-label" data-i18n="lum">Luminance ℓ</div><div class="channel-track"><div class="channel-fill clum" id="fillLum"></div></div><div class="channel-val" id="valLum"></div></div>
+          <div class="channel-row"><div class="channel-label" data-i18n="lum_max">Max luminance on direction</div><div class="channel-track"><div class="channel-fill clum" id="fillLumMax"></div></div><div class="channel-val" id="valLumMax"></div></div>
+          <div class="channel-row"><div class="channel-label" data-i18n="r_weight">R (π₃)</div><div class="channel-track"><div class="channel-fill c3" id="fill3"></div></div><div class="channel-val" id="val3"></div></div>
+          <div class="channel-row"><div class="channel-label" data-i18n="g_weight">V (π₅)</div><div class="channel-track"><div class="channel-fill c5" id="fill5"></div></div><div class="channel-val" id="val5"></div></div>
+          <div class="channel-row"><div class="channel-label" data-i18n="b_weight">B (π₇)</div><div class="channel-track"><div class="channel-fill c7" id="fill7"></div></div><div class="channel-val" id="val7"></div></div>
+          <div class="channel-row"><div class="channel-label" data-i18n="sat_rel">Relative saturation</div><div class="channel-track"><div class="channel-fill csat" id="fillSRel"></div></div><div class="channel-val" id="valSRel"></div></div>
+          <div class="channel-row"><div class="channel-label" data-i18n="sat_exact">Exact S = DKL(π||u)</div><div class="channel-track"><div class="channel-fill csat" id="fillS"></div></div><div class="channel-val" id="valS"></div></div>
+          <div class="channel-row"><div class="channel-label" data-i18n="chrom_l">Chromatic entropy L</div><div class="channel-track"><div class="channel-fill clum" id="fillL"></div></div><div class="channel-val" id="valL"></div></div>
+          <div class="channel-row"><div class="channel-label" data-i18n="budget">Chromatic budget S+L</div><div class="channel-track"><div class="channel-fill ctotal" id="fillBudget"></div></div><div class="channel-val" id="valBudget"></div></div>
+        </div>
+
+        <div class="metric-cards">
+          <div class="metric-card"><span class="metric-card-label" data-i18n="hue_angle">Hue angle</span><div class="metric-card-value" id="metricHue"></div></div>
+          <div class="metric-card"><span class="metric-card-label" data-i18n="sat_rel">Relative saturation</span><div class="metric-card-value" id="metricRelSat"></div></div>
+          <div class="metric-card"><span class="metric-card-label" data-i18n="lum">Luminance ℓ</span><div class="metric-card-value" id="metricLum"></div></div>
+          <div class="metric-card"><span class="metric-card-label" data-i18n="chrom_l">Chromatic entropy L</span><div class="metric-card-value" id="metricEntropy"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <details class="theory-panel">
+    <summary data-i18n="theory">Theory</summary>
+    <div class="theory-content" data-i18n-html="theory_text">
+      The mapping is built in four steps: <code>R,G,B → πdir</code>, then a relative saturation slider moves from gray <code>u=(1/3,1/3,1/3)</code> toward that direction, then luminance is applied only as a fraction of the maximum luminance allowed by that direction inside the sRGB gamut, and only then the color is converted for display. This avoids the unstable behavior caused by trying to impose absolute luminance independently of chromatic direction.
+    </div>
+  </details>
+</section>
+</main>
+
+<script>
+const I18N = {
+  fr: {
+    headerTitle:"Module 01 - Lire une couleur en SCS",
+    siteTagline:"Contrôles SCS pédagogiques.",
+    title:"Lire une couleur en mode ℓrvb",
+    desc:"R, V, B choisissent une direction dans le simplexe. La saturation S éloigne du gris le long de cette direction. La luminance ℓ est relative au maximum autorisé pour cette direction.",
+    hex:"Hex",
+    lum_slider:"Luminance ℓ / ℓmax(direction)",
+    r_weight:"R (π₃)",
+    g_weight:"V (π₅)",
+    b_weight:"B (π₇)",
+    sat_slider:"Saturation / Smax(direction)",
+    left_note:"Les contrôles se lisent simplement ainsi : <strong>R, V, B</strong> règlent la composition chromatique, <strong>S</strong> règle l’intensité de la couleur, et <strong>ℓ</strong> règle sa clarté. On peut donc partir d’une direction chromatique, puis la rendre plus ou moins vive et plus ou moins lumineuse.",
+    simplex_form:"Forme simplex (ℓ ; R, V, B)",
+    simplex_note:"R, V, B sont des poids simplex normalisés. Ils définissent une direction chromatique, pas des valeurs RGB d’affichage.",
+    polar_form:"Forme polaire (ℓ ; S, θ)",
+    polar_note:"S est montrée ici comme une saturation relative le long de la direction simplex choisie.",
+    lum:"Luminance ℓ",
+    lum_max:"Luminance max sur la direction",
+    sat_rel:"Saturation relative",
+    sat_exact:"S exact = DKL(π||u)",
+    chrom_l:"Entropie chromatique L",
+    budget:"Budget chromatique S+L",
+    hue_angle:"Angle de teinte",
+    theory:"Theory",
+    theory_text:"Le SCS sépare une couleur en deux parties : <code>ℓ</code>, la luminance, c’est-à-dire la clarté globale, et la structure chromatique. Dans le <em>mode ℓrvb</em>, <code>R, V, B</code> ne sont pas les valeurs finales du pixel à l’écran. Ce sont simplement des <strong>proportions de couleur</strong> : combien de rouge, combien de vert, combien de bleu il y a dans la direction de la couleur. Par exemple, une couleur peut être composée d’environ 60% de rouge, 30% de vert et 10% de bleu dans sa structure chromatique. La lecture polaire <code>SCS(ℓ ; S, θ)</code> dit la même chose autrement : <code>S</code> mesure à quel point la couleur s’éloigne du gris, et <code>θ</code> indique vers quelle teinte elle pointe.",
+    preset_red:"Rouge pur", preset_green:"Vert pur", preset_blue:"Bleu pur", preset_cyan:"Cyan", preset_magenta:"Magenta", preset_yellow:"Jaune",
+    preset_black:"Noir pur", preset_gray18:"Gris 18%", preset_gray50:"Gris neutre", preset_white:"Blanc pur", preset_orange:"Orange", preset_violet:"Violet",
+    preset_skin_light:"Peau claire", preset_skin_dark:"Peau foncée", preset_sky:"Bleu ciel", preset_foliage:"Feuillage"
+  },
+  en: {
+    headerTitle:"Module 01 - Read a Color in SCS",
+    siteTagline:"Pedagogical SCS controls.",
+    title:"Read a Color in ℓrgb Mode",
+    desc:"R, G, B choose a simplex direction. Saturation S moves away from gray along that direction. Luminance ℓ is relative to the maximum allowed for that direction.",
+    hex:"Hex",
+    lum_slider:"Luminance ℓ / ℓmax(direction)",
+    r_weight:"R (π₃)",
+    g_weight:"G (π₅)",
+    b_weight:"B (π₇)",
+    sat_slider:"Saturation / Smax(direction)",
+    left_note:"The controls can be read very simply: <strong>R, G, B</strong> set the chromatic composition, <strong>S</strong> sets color intensity, and <strong>ℓ</strong> sets brightness. So you can start from a chromatic direction, then make it more or less vivid and more or less bright.",
+    simplex_form:"Simplex (ℓ ; R, G, B) form",
+    simplex_note:"R, G, B are normalized simplex weights. They define a chromatic direction, not display RGB values.",
+    polar_form:"Polar form (ℓ ; S, θ)",
+    polar_note:"S is shown here as a relative saturation along the chosen simplex direction.",
+    lum:"Luminance ℓ",
+    lum_max:"Max luminance on direction",
+    sat_rel:"Relative saturation",
+    sat_exact:"Exact S = DKL(π||u)",
+    chrom_l:"Chromatic entropy L",
+    budget:"Chromatic budget S+L",
+    hue_angle:"Hue angle",
+    theory:"Theory",
+    theory_text:"SCS separates a color into two parts: <code>ℓ</code>, luminance, meaning overall brightness, and chromatic structure. In <em>ℓrgb mode</em>, <code>R, G, B</code> are not the final pixel values shown on screen. They are simply <strong>color proportions</strong>: how much red, how much green, and how much blue there is in the color direction. For example, a color may contain about 60% red, 30% green, and 10% blue in its chromatic structure. The polar reading <code>SCS(ℓ ; S, θ)</code> says the same thing differently: <code>S</code> measures how far the color is from gray, and <code>θ</code> (theta) tells you which hue direction it points toward.",
+    preset_red:"Pure red", preset_green:"Pure green", preset_blue:"Pure blue", preset_cyan:"Cyan", preset_magenta:"Magenta", preset_yellow:"Yellow",
+    preset_black:"Pure black", preset_gray18:"18% gray", preset_gray50:"Neutral gray", preset_white:"Pure white", preset_orange:"Orange", preset_violet:"Violet",
+    preset_skin_light:"Light skin", preset_skin_dark:"Dark skin", preset_sky:"Sky blue", preset_foliage:"Foliage"
+  }
+};
+
+function detectLang(key){ const saved = localStorage.getItem(key); if(saved==='fr'||saved==='en') return saved; return (navigator.language||'').toLowerCase().startsWith('fr')?'fr':'en'; }
+let currentLang = detectLang('module01_lang');
+function applyLanguage(lang){
+  currentLang=lang;
+  localStorage.setItem('module01_lang',lang);
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.getAttribute('data-i18n');
+    if(I18N[lang][k]) el.textContent=I18N[lang][k];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{
+    const k=el.getAttribute('data-i18n-html');
+    if(I18N[lang][k]) el.innerHTML=I18N[lang][k];
+  });
+  document.getElementById('lang-fr').classList.toggle('active',lang==='fr');
+  document.getElementById('lang-en').classList.toggle('active',lang==='en');
+  update();
+}
+document.getElementById('lang-fr').addEventListener('click', ()=>applyLanguage('fr'));
+document.getElementById('lang-en').addEventListener('click', ()=>applyLanguage('en'));
+
+const U = [1/3,1/3,1/3];
+const Y = [0.2126, 0.7152, 0.0722];
+const LOG2_3 = Math.log2(3);
+
+function clamp01(x){ return Math.min(1, Math.max(0, x)); }
+function normalize(v){
+  const s = v.reduce((a,b)=>a+b,0);
+  return s > 1e-12 ? v.map(x => x/s) : [1/3,1/3,1/3];
+}
+function mix(a,b,t){ return a.map((v,i)=>v + t*(b[i]-v)); }
+function entropy(p){ return -p.reduce((a,v)=>a+(v>1e-12 ? v*Math.log2(v) : 0),0); }
+function kl(p,q){ return p.reduce((a,v,i)=>a+(v>1e-12 ? v*Math.log2(v/q[i]) : 0),0); }
+function maxScaleForDirection(p){ return 1 / Math.max(...p); }
+function luminanceOf(p){ return Y[0]*p[0] + Y[1]*p[1] + Y[2]*p[2]; }
+function srgbEncode(c){ c = clamp01(c); return c <= 0.0031308 ? 12.92*c : 1.055*Math.pow(c,1/2.4)-0.055; }
+function srgbDecode(c){ c = clamp01(c); return c <= 0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); }
+function rgbToHex(rgb){ return '#' + rgb.map(v => Math.round(clamp01(v)*255).toString(16).padStart(2,'0')).join(''); }
+function hexToRgb(hex){
+  const s = hex.replace('#','');
+  const n = parseInt(s,16);
+  return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];
+}
+function hueAngleFromRgb(rgb){
+  const [r,g,b]=rgb;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+  if(d===0) return 0;
+  let h=0;
+  switch(max){
+    case r: h=((g-b)/d)%6; break;
+    case g: h=(b-r)/d+2; break;
+    default: h=(r-g)/d+4; break;
+  }
+  h *= 60;
+  if(h<0) h += 360;
+  return h;
+}
+function relSatToAlpha(relSat, pDir){
+  const comps = [];
+  for(let i=0;i<3;i++){
+    const den = pDir[i] - U[i];
+    if(Math.abs(den) < 1e-12) continue;
+    if(den > 0) comps.push((1 - U[i]) / den);
+    else comps.push((0 - U[i]) / den);
+  }
+  const positive = comps.filter(v => Number.isFinite(v) && v > 0);
+  if(positive.length === 0) return 0;
+  const alphaMax = Math.min(...positive);
+  return relSat * alphaMax;
+}
+function buildModel(){
+  const ellRel = Number(document.getElementById('lumSlider').value) / 100;
+  const rawDir = [
+    Number(document.getElementById('rSlider').value),
+    Number(document.getElementById('gSlider').value),
+    Number(document.getElementById('bSlider').value)
+  ];
+  const satRel = Number(document.getElementById('satSlider').value) / 100;
+
+  const pDir = normalize(rawDir);
+  const alphaMax = relSatToAlpha(1, pDir);
+  const alpha = alphaMax <= 1e-12 ? 0 : relSatToAlpha(satRel, pDir);
+  const p = alphaMax <= 1e-12 ? [...U] : mix(U, pDir, alpha);
+
+  const scaleMax = maxScaleForDirection(p);
+  const lumMax = scaleMax * luminanceOf(p);
+  const targetLum = ellRel * lumMax;
+  const scale = targetLum / Math.max(luminanceOf(p), 1e-12);
+
+  const rgbLin = p.map(v => v * scale);
+  const rgb = rgbLin.map(srgbEncode);
+  const S = kl(p,U);
+  const L = entropy(p);
+  const budget = S + L;
+  const theta = hueAngleFromRgb(rgb);
+  const relSatExact = alphaMax <= 1e-12 ? 0 : alpha / alphaMax;
+
+  return { ellRel, pDir, p, lumMax, targetLum, rgb, S, L, budget, theta, relSatExact };
+}
+function setBar(id,val,max){
+  document.getElementById(id).style.width = Math.max(0, Math.min(100, val/max*100)) + '%';
+}
+function update(){
+  const m = buildModel();
+  const hex = rgbToHex(m.rgb);
+  const gLetter = currentLang === 'fr' ? 'V' : 'G';
+
+  document.getElementById('swatch').style.background = hex;
+  document.getElementById('hex').textContent = hex;
+
+  document.getElementById('lumSliderVal').textContent = (Number(document.getElementById('lumSlider').value)).toFixed(1) + '%';
+  document.getElementById('rSliderVal').textContent = document.getElementById('rSlider').value;
+  document.getElementById('gSliderVal').textContent = document.getElementById('gSlider').value;
+  document.getElementById('bSliderVal').textContent = document.getElementById('bSlider').value;
+  document.getElementById('satSliderVal').textContent = (Number(document.getElementById('satSlider').value)).toFixed(1) + '%';
+
+  document.getElementById('simplexFormula').textContent =
+    'SCS(' + (m.targetLum*100).toFixed(1) + '% ; R ' + (m.p[0]*100).toFixed(1) + '%, ' + gLetter + ' ' + (m.p[1]*100).toFixed(1) + '%, B ' + (m.p[2]*100).toFixed(1) + '%)';
+  document.getElementById('polarFormula').textContent =
+    'SCS(' + (m.targetLum*100).toFixed(1) + '% ; S ' + (m.relSatExact*100).toFixed(1) + '%, θ ' + m.theta.toFixed(1) + '°)';
+
+  setBar('fillLum', m.targetLum, 1);
+  setBar('fillLumMax', m.lumMax, 1);
+  setBar('fill3', m.p[0], 1);
+  setBar('fill5', m.p[1], 1);
+  setBar('fill7', m.p[2], 1);
+  setBar('fillSRel', m.relSatExact, 1);
+  setBar('fillS', m.S, LOG2_3);
+  setBar('fillL', m.L, LOG2_3);
+  setBar('fillBudget', m.budget, LOG2_3);
+
+  document.getElementById('valLum').textContent = (m.targetLum*100).toFixed(1) + '%';
+  document.getElementById('valLumMax').textContent = (m.lumMax*100).toFixed(1) + '%';
+  document.getElementById('val3').textContent = (m.p[0]*100).toFixed(1) + '%';
+  document.getElementById('val5').textContent = (m.p[1]*100).toFixed(1) + '%';
+  document.getElementById('val7').textContent = (m.p[2]*100).toFixed(1) + '%';
+  document.getElementById('valSRel').textContent = (m.relSatExact*100).toFixed(1) + '%';
+  document.getElementById('valS').textContent = m.S.toFixed(3);
+  document.getElementById('valL').textContent = m.L.toFixed(3);
+  document.getElementById('valBudget').textContent = m.budget.toFixed(3);
+
+  document.getElementById('metricHue').textContent = m.theta.toFixed(1) + '°';
+  document.getElementById('metricRelSat').textContent = (m.relSatExact*100).toFixed(1) + '%';
+  document.getElementById('metricLum').textContent = (m.targetLum*100).toFixed(1) + '%';
+  document.getElementById('metricEntropy').textContent = m.L.toFixed(3);
+}
+function loadHexPreset(hex){
+  const rgb = hexToRgb(hex).map(srgbDecode);
+  const sum = rgb[0]+rgb[1]+rgb[2];
+  const pDir = sum > 1e-12 ? rgb.map(v => v/sum) : [1/3,1/3,1/3];
+  const S = kl(pDir,U);
+  const relSat = Math.min(1, S / LOG2_3);
+  const lumMax = maxScaleForDirection(pDir) * luminanceOf(pDir);
+  const lum = luminanceOf(rgb);
+  const lumRel = lumMax > 1e-12 ? Math.min(1, lum / lumMax) : 0;
+
+  document.getElementById('lumSlider').value = Math.round(lumRel * 100);
+  document.getElementById('rSlider').value = Math.round(pDir[0] * 100);
+  document.getElementById('gSlider').value = Math.round(pDir[1] * 100);
+  document.getElementById('bSlider').value = Math.round(pDir[2] * 100);
+  document.getElementById('satSlider').value = Math.round(relSat * 100);
+  update();
+}
+
+['lumSlider','rSlider','gSlider','bSlider','satSlider'].forEach(id => document.getElementById(id).addEventListener('input', update));
+document.querySelectorAll('[data-hex]').forEach(btn => btn.addEventListener('click', ()=>loadHexPreset(btn.dataset.hex)));
+
+applyLanguage(currentLang);
+update();
+</script>
+</body>
+</html>

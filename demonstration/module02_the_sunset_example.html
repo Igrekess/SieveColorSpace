@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SCS — Module 02 - Sunset, Local Structure, and Color Budget</title>
+<style>
+:root{
+  --bg:#0a0a0a; --surface:#141414; --surface2:#1e1e1e; --border:#2a2a2a;
+  --text:#e0e0e0; --text-dim:#8a8a8a; --gold:#c8a84e; --gold-dim:#8a7234;
+  --blue:#6688bb; --red:#e05050; --green:#50c870; --radius:12px; --maxw:1220px;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:0 16px 40px;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+header,main{max-width:var(--maxw);margin:0 auto}
+header{padding:28px 0 18px;border-bottom:1px solid var(--border)}
+.header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+h1{margin:0;font-size:1.95rem;letter-spacing:-0.02em}
+h1 span{color:var(--gold)}
+.tagline{margin:6px 0 0;color:var(--text-dim)}
+.module{margin-top:28px;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px}
+.module-header{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.module-num{font-size:2rem;font-weight:800;line-height:1;color:var(--gold-dim);opacity:.55}
+.module-desc{margin:0 0 18px;color:var(--text-dim);line-height:1.58}
+.panel{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px}
+.panel.scs{border-color:var(--gold-dim)}
+.btn{appearance:none;border:1px solid var(--border);cursor:pointer;background:var(--surface2);color:var(--text);padding:10px 16px;font-weight:600;border-radius:10px}
+.btn:hover,.btn.active{border-color:var(--gold);color:#fff}
+.lang-toggle{display:flex;gap:6px}
+.lang-btn{padding:8px 12px;font-size:.82rem}
+.lang-btn.active{border-color:var(--gold);color:var(--gold)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1.05fr .95fr .95fr;gap:16px}
+@media (max-width:980px){.grid-2,.grid-3{grid-template-columns:1fr}}
+.inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.label{display:block;font-size:.8rem;color:var(--text-dim);margin-bottom:.35rem}
+input[type="color"]{width:44px;height:32px;padding:0;background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer}
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:var(--surface2);outline:none}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);border:2px solid var(--bg);cursor:pointer}
+input[type="range"]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--gold);border:2px solid var(--bg);cursor:pointer}
+.slider-row{display:flex;align-items:center;gap:10px}
+.slider-row input{flex:1}
+.slider-val{min-width:72px;text-align:right;color:var(--gold);font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.canvas-wrap{width:100%;aspect-ratio:16/10;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#000;position:relative}
+canvas{display:block;width:100%;height:100%}
+.panel h3{margin:0 0 10px;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim)}
+.note{margin-top:10px;font-size:.78rem;color:var(--text-dim);line-height:1.55}
+.kv{display:grid;grid-template-columns:1fr auto;gap:8px 14px;font-size:.82rem}
+.kv .k{color:var(--text-dim)}
+.kv .v{color:var(--gold);text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.gauge{display:grid;grid-template-columns:82px 1fr 62px;gap:8px;align-items:center;margin-top:8px}
+.glabel{font-size:.8rem;color:var(--text-dim)}
+.gtrack{height:12px;background:var(--surface2);border-radius:999px;overflow:hidden}
+.gfill{height:100%;border-radius:999px}
+.gfill.s{background:var(--gold)}
+.gfill.l{background:var(--blue)}
+.gfill.total{background:linear-gradient(90deg,var(--gold),var(--blue))}
+.gval{font-size:.8rem;color:var(--gold);text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.swatch{height:82px;border-radius:12px;border:1px solid var(--border);margin-bottom:10px}
+.formula{background:#080808;border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--gold);font-size:.88rem;line-height:1.5}
+.smallcaps{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim)}
+details.theory-panel{margin-top:1.2rem;border-top:1px solid var(--border);padding-top:.8rem}
+details.theory-panel summary{font-size:.8rem;color:var(--gold-dim);cursor:pointer;text-transform:uppercase;letter-spacing:.08em;list-style:none}
+details.theory-panel summary::before{content:"▸ "}
+details.theory-panel[open] summary::before{content:"▾ "}
+details.theory-panel summary::-webkit-details-marker{display:none}
+.theory-content{margin-top:.8rem;padding:1rem;background:#080808;border-radius:12px;font-size:.85rem;line-height:1.7;color:var(--text-dim)}
+.theory-content code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--gold);font-size:.85em}
+.presets{display:flex;flex-wrap:wrap;gap:8px}
+.preset-btn{font-size:.76rem;padding:6px 10px}
+.sample-chip{position:absolute;width:18px;height:18px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.35);transform:translate(-50%,-50%)}
+.sample-chip.sky{background:#4ea1ff}
+.sample-chip.sun{background:#ff9b33}
+.sample-legend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.legend-dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:6px}
+.scene-links{margin-top:6px;font-size:.76rem;color:var(--text-dim)}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-row">
+    <div>
+      <h1><span>SCS</span> — <span data-i18n="headerTitle">Module 02 - Sunset, Local Structure, and Color Budget</span></h1>
+      <p class="tagline" data-i18n="siteTagline">A connected module: what you see in the sunset is explained by local chromatic budgets.</p>
+    </div>
+    <div class="lang-toggle">
+      <button class="btn lang-btn" id="lang-fr">FR</button>
+      <button class="btn lang-btn" id="lang-en">EN</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="module">
+  <div class="module-header">
+    <span class="module-num">01</span>
+    <h2 data-i18n="title" style="margin:0;font-size:1.25rem;">Sunset, Local Structure, and Color Budget</h2>
+  </div>
+  <p class="module-desc" data-i18n="desc">This version connects the scene and the theory directly. The sunset is compared in HSL and SCS, then two local regions — sky and sun — are sampled and read through the exact chromatic budget of SCS.</p>
+
+  <div class="grid-3">
+    <div class="panel">
+      <h3 data-i18n="controlsTitle">Controls</h3>
+      <div class="inline" style="margin-bottom:12px">
+        <div>
+          <label class="label" for="pickSky" data-i18n="sky">Sky</label>
+          <input type="color" id="pickSky" value="#2d64ff">
+        </div>
+        <div>
+          <label class="label" for="pickSun" data-i18n="sun">Sun</label>
+          <input type="color" id="pickSun" value="#ff8a1f">
+        </div>
+      </div>
+      <div>
+        <label class="label" for="brightSlider" data-i18n="brightness">Brightness control</label>
+        <div class="slider-row">
+          <input type="range" id="brightSlider" min="0" max="100" value="50">
+          <div class="slider-val" id="brightVal">50%</div>
+        </div>
+      </div>
+      <div>
+        <label class="label" for="satSlider" data-i18n="saturation">Saturation control</label>
+        <div class="slider-row">
+          <input type="range" id="satSlider" min="0" max="100" value="50">
+          <div class="slider-val" id="satVal">50%</div>
+        </div>
+      </div>
+      <div class="note" data-i18n="controlsNote">The same two sliders are sent to both systems. In HSL, lightness and saturation act in cylindrical coordinates. In SCS, luminance ℓ and chromatic structure are treated separately, which makes the difference easier to read on a high-contrast scene.</div>
+      <div class="scene-links" data-i18n="sceneExplain">The two colored markers on the scene identify the local regions read below as exact SCS budgets.</div>
+    </div>
+
+    <div class="panel">
+      <h3>HSL</h3>
+      <div class="canvas-wrap">
+        <canvas id="canvasHSL" width="920" height="575"></canvas>
+        <div class="sample-chip sky" id="chipHslSky"></div>
+        <div class="sample-chip sun" id="chipHslSun"></div>
+      </div>
+      <div class="note" data-i18n="hslNote">In HSL, increasing L mixes pixels toward white. Local chromatic relations collapse progressively.</div>
+      <div class="kv" style="margin-top:10px">
+        <div class="k" data-i18n="hslReadout">Control applied</div><div class="v" id="hslReadout">L = 50%, S = 50%</div>
+      </div>
+    </div>
+
+    <div class="panel scs">
+      <h3>SCS</h3>
+      <div class="canvas-wrap">
+        <canvas id="canvasSCS" width="920" height="575"></canvas>
+        <div class="sample-chip sky" id="chipScsSky"></div>
+        <div class="sample-chip sun" id="chipScsSun"></div>
+      </div>
+      <div class="note" data-i18n="scsNote">In this scene proxy, each region keeps its chromatic simplex direction π fixed while only luminance ℓ changes.</div>
+      <div class="kv" style="margin-top:10px">
+        <div class="k" data-i18n="scsReadout">Control applied</div><div class="v" id="scsReadout">ℓ = 50%, S = 50%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sample-legend">
+    <span><span class="legend-dot" style="background:#4ea1ff"></span><span data-i18n="skySample">Sky sample</span></span>
+    <span><span class="legend-dot" style="background:#ff9b33"></span><span data-i18n="sunSample">Sun sample</span></span>
+  </div>
+
+  <div class="grid-2" style="margin-top:16px">
+    <div class="panel scs">
+      <h3 data-i18n="skyBudget">Sky sample — exact local budget</h3>
+      <div class="swatch" id="skySwatch"></div>
+      <div class="formula" id="skyFormula"></div>
+      <div class="gauge"><div class="glabel">S</div><div class="gtrack"><div class="gfill s" id="skyFillS"></div></div><div class="gval" id="skyValS">0.000</div></div>
+      <div class="gauge"><div class="glabel">L</div><div class="gtrack"><div class="gfill l" id="skyFillL"></div></div><div class="gval" id="skyValL">0.000</div></div>
+      <div class="gauge"><div class="glabel">S+L</div><div class="gtrack"><div class="gfill total" style="width:100%"></div></div><div class="gval" id="skyValSL">1.585</div></div>
+      <div class="kv" style="margin-top:10px">
+        <div class="k">π</div><div class="v" id="skyPi"></div>
+        <div class="k">θ</div><div class="v" id="skyTheta"></div>
+      </div>
+    </div>
+
+    <div class="panel scs">
+      <h3 data-i18n="sunBudget">Sun sample — exact local budget</h3>
+      <div class="swatch" id="sunSwatch"></div>
+      <div class="formula" id="sunFormula"></div>
+      <div class="gauge"><div class="glabel">S</div><div class="gtrack"><div class="gfill s" id="sunFillS"></div></div><div class="gval" id="sunValS">0.000</div></div>
+      <div class="gauge"><div class="glabel">L</div><div class="gtrack"><div class="gfill l" id="sunFillL"></div></div><div class="gval" id="sunValL">0.000</div></div>
+      <div class="gauge"><div class="glabel">S+L</div><div class="gtrack"><div class="gfill total" style="width:100%"></div></div><div class="gval" id="sunValSL">1.585</div></div>
+      <div class="kv" style="margin-top:10px">
+        <div class="k">π</div><div class="v" id="sunPi"></div>
+        <div class="k">θ</div><div class="v" id="sunTheta"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:16px">
+    <div class="panel">
+      <h3 data-i18n="readingTitle">How to read the module</h3>
+      <div class="note" data-i18n="readingNote">The scene is the intuition: HSL and SCS do not handle a bright, saturated sunset in the same way. The two local budget cards are the explanation: in SCS, each local color keeps a coherent chromatic structure π while luminance varies.</div>
+    </div>
+    <div class="panel scs">
+      <h3 data-i18n="lawTitle">Exact law</h3>
+      <div class="formula">S(π) = D<sub>KL</sub>(π || u), &nbsp; L(π) = H(π), &nbsp; u = (1/3, 1/3, 1/3), &nbsp; S + L = log₂3</div>
+      <div class="note" data-i18n="lawNote">The scene part is a qualitative proxy. The two local readouts are the exact simplex quantities.</div>
+    </div>
+  </div>
+
+  <details class="theory-panel">
+    <summary data-i18n="theory">Theory</summary>
+    <div class="theory-content" data-i18n-html="theoryText">
+      <p><strong>SCS separates two different things.</strong></p>
+      <p><code>ℓ ∈ [0,1]</code> is the luminance term: it measures brightness relative to white.</p>
+      <p><code>π = (π₃, π₅, π₇) ∈ Δ²</code> is the chromatic structure: a probability distribution on the three active channels.</p>
+      <p>On the simplex, saturation is <code>S(π)=D<sub>KL</sub>(π||u)</code> and chromatic entropy is <code>L(π)=H(π)</code>. These obey the exact conservation law <code>S+L=log₂3</code>.</p>
+      <p>In this module, the sunset scene is not the proof of the law. It is the visual intuition. The two local samples — sky and sun — are what connect the scene back to the exact SCS quantities.</p>
+    </div>
+  </details>
+</section>
+</main>
+
+<script>
+const I18N = {
+  fr: {
+    headerTitle:"Module 02 - Coucher de soleil, structure locale et budget couleur",
+    siteTagline:"Ce qu’on voit dans le coucher de soleil est expliqué par des budgets chromatiques locaux.",
+    title:"Coucher de soleil, structure locale et budget couleur",
+    desc:"Le coucher de soleil est comparé en HSL et en SCS, puis deux régions locales — le ciel et le soleil — sont échantillonnées et lues à travers le budget chromatique exact du SCS.",
+    controlsTitle:"Contrôles",
+    sky:"Ciel",
+    sun:"Soleil",
+    brightness:"Contrôle de clarté",
+    saturation:"Contrôle de saturation",
+    controlsNote:"Les deux mêmes sliders sont envoyés aux deux systèmes. En HSL, lightness et saturation agissent dans des coordonnées cylindriques. En SCS, la luminance ℓ et la structure chromatique sont traitées séparément, ce qui rend la différence plus lisible sur une scène à fort contraste.",
+    sceneExplain:"Les deux marqueurs colorés sur la scène identifient les régions locales lues ci-dessous comme budgets SCS exacts.",
+    hslNote:"En HSL, augmenter L pousse les pixels vers le blanc, et augmenter S agit dans le même modèle cylindrique. Sur un coucher de soleil très contrasté, les deux effets interagissent vite et les relations locales de couleur s’effondrent plus tôt.",
+    scsNote:"Dans cette proxy de scène, la luminance ℓ et la structure chromatique sont ajustées séparément. La scène garde donc plus longtemps son organisation chaud/froid sous de fortes corrections.",
+    hslReadout:"Contrôle appliqué",
+    scsReadout:"Contrôle appliqué",
+    skySample:"Échantillon ciel",
+    sunSample:"Échantillon soleil",
+    skyBudget:"Échantillon ciel — budget local exact",
+    sunBudget:"Échantillon soleil — budget local exact",
+    readingTitle:"Comment lire le module",
+    readingNote:"HSL et SCS ne traitent pas de la même manière un coucher de soleil lumineux et saturé. Les deux cartes locales donnent l’explication : en SCS, chaque couleur locale garde une structure chromatique π cohérente pendant que la luminance varie.",
+    lawTitle:"Loi exacte",
+    lawNote:"La partie scène est une proxy qualitative. Les deux lectures locales, elles, montrent les quantités simplex exactes.",
+    theory:"Theory",
+    theoryText:`<p><strong>Le SCS sépare deux choses différentes.</strong></p>
+      <p><code>ℓ ∈ [0,1]</code> est le terme de luminance : il mesure la clarté relativement au blanc.</p>
+      <p><code>π = (π₃, π₅, π₇) ∈ Δ²</code> est la structure chromatique : une distribution de probabilité sur les trois canaux actifs.</p>
+      <p>Sur le simplexe, la saturation est <code>S(π)=D<sub>KL</sub>(π||u)</code> et l’entropie chromatique est <code>L(π)=H(π)</code>. Ces deux quantités obéissent à la loi exacte <code>S+L=log₂3</code>.</p>
+      <p>Dans ce module, la scène de coucher de soleil n’est pas la preuve de la loi. C’est l’intuition visuelle. Les deux échantillons locaux — ciel et soleil — sont ce qui reconnecte la scène aux quantités exactes du SCS.</p>`
+  },
+  en: {
+    headerTitle:"Module 02 - Sunset, Local Structure, and Color Budget",
+    siteTagline:"What you see in the sunset is explained by local chromatic budgets.",
+    title:"Sunset, Local Structure, and Color Budget",
+    desc:"The sunset is compared in HSL and SCS, then two local regions — sky and sun — are sampled and read through the exact chromatic budget of SCS.",
+    controlsTitle:"Controls",
+    sky:"Sky",
+    sun:"Sun",
+    brightness:"Brightness control",
+    saturation:"Saturation control",
+    controlsNote:"The same two sliders are sent to both systems. In HSL, lightness and saturation act in cylindrical coordinates. In SCS, luminance ℓ and chromatic structure are treated separately, which makes the difference easier to read on a high-contrast scene.",
+    sceneExplain:"The two colored markers on the scene identify the local regions read below as exact SCS budgets.",
+    hslNote:"In HSL, increasing L pushes pixels toward white, and increasing S acts on the same cylindrical model. On a high-contrast sunset, the two effects interfere quickly and local color relations collapse sooner.",
+    scsNote:"In this scene proxy, luminance ℓ and chromatic structure are adjusted separately. This lets the scene keep its warm/cool organization longer under strong edits.",
+    hslReadout:"Control applied",
+    scsReadout:"Control applied",
+    skySample:"Sky sample",
+    sunSample:"Sun sample",
+    skyBudget:"Sky sample — exact local budget",
+    sunBudget:"Sun sample — exact local budget",
+    readingTitle:"How to read the module",
+    readingNote:"HSL and SCS do not handle a bright, saturated sunset in the same way. The two local budget cards are the explanation: in SCS, each local color keeps a coherent chromatic structure π while luminance varies.",
+    lawTitle:"Exact law",
+    lawNote:"The scene part is a qualitative proxy. The two local readouts are the exact simplex quantities.",
+    theory:"Theory",
+    theoryText:`<p><strong>SCS separates two different things.</strong></p>
+      <p><code>ℓ ∈ [0,1]</code> is the luminance term: it measures brightness relative to white.</p>
+      <p><code>π = (π₃, π₅, π₇) ∈ Δ²</code> is the chromatic structure: a probability distribution on the three active channels.</p>
+      <p>On the simplex, saturation is <code>S(π)=D<sub>KL</sub>(π||u)</code> and chromatic entropy is <code>L(π)=H(π)</code>. These obey the exact conservation law <code>S+L=log₂3</code>.</p>
+      <p>In this module, the sunset scene is not the proof of the law. It is the visual intuition. The two local samples — sky and sun — are what connect the scene back to the exact SCS quantities.</p>`
+  }
+};
+
+function detectLang(){
+  const s = localStorage.getItem('module01_connected_lang');
+  if(s==='fr'||s==='en') return s;
+  return (navigator.language||'').toLowerCase().startsWith('fr') ? 'fr' : 'en';
+}
+let currentLang = detectLang();
+function applyLanguage(lang){
+  currentLang = lang;
+  localStorage.setItem('module01_connected_lang', lang);
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(I18N[lang][key]) el.textContent = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    if(I18N[lang][key]) el.innerHTML = I18N[lang][key];
+  });
+  document.getElementById('lang-fr').classList.toggle('active', lang==='fr');
+  document.getElementById('lang-en').classList.toggle('active', lang==='en');
+  render();
+}
+document.getElementById('lang-fr').addEventListener('click', ()=>applyLanguage('fr'));
+document.getElementById('lang-en').addEventListener('click', ()=>applyLanguage('en'));
+
+function clamp01(x){ return Math.min(1, Math.max(0, x)); }
+function lerp(a,b,t){ return a + (b-a)*t; }
+function smoothstep(t){ t=clamp01(t); return t*t*(3-2*t); }
+function srgbToLinear(c){ c=clamp01(c); return c <= 0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055,2.4); }
+function linearToSrgb(c){ c=clamp01(c); return c <= 0.0031308 ? 12.92*c : 1.055*Math.pow(c,1/2.4)-0.055; }
+function hexToRgb(hex){
+  const s = hex.replace('#','');
+  const n = parseInt(s,16);
+  return [(n>>16&255)/255, (n>>8&255)/255, (n&255)/255];
+}
+function rgbCss(rgb){ return `rgb(${Math.round(clamp01(rgb[0])*255)}, ${Math.round(clamp01(rgb[1])*255)}, ${Math.round(clamp01(rgb[2])*255)})`; }
+function rgbToHsl(r,g,b){
+  const max=Math.max(r,g,b), min=Math.min(r,g,b);
+  let h=0,s=0; const l=(max+min)/2; const d=max-min;
+  if(d!==0){
+    s=d/(1-Math.abs(2*l-1));
+    switch(max){
+      case r: h=((g-b)/d)%6; break;
+      case g: h=(b-r)/d+2; break;
+      default: h=(r-g)/d+4; break;
+    }
+    h/=6; if(h<0) h+=1;
+  }
+  return [h, s||0, l];
+}
+function hue2rgb(p,q,t){
+  if(t<0) t+=1; if(t>1) t-=1;
+  if(t<1/6) return p+(q-p)*6*t;
+  if(t<1/2) return q;
+  if(t<2/3) return p+(q-p)*(2/3-t)*6;
+  return p;
+}
+function hslToRgb(h,s,l){
+  if(s===0) return [l,l,l];
+  const q=l<0.5 ? l*(1+s) : l+s-l*s;
+  const p=2*l-q;
+  return [hue2rgb(p,q,h+1/3), hue2rgb(p,q,h), hue2rgb(p,q,h-1/3)];
+}
+const YCOEF = [0.2126,0.7152,0.0722];
+const U = [1/3,1/3,1/3];
+const LOG2_3 = Math.log2(3);
+
+function normalize(v){
+  const s = v.reduce((a,b)=>a+b,0);
+  return s > 1e-12 ? v.map(x=>x/s) : [1/3,1/3,1/3];
+}
+function luminanceLinear(rgbLin){
+  return YCOEF[0]*rgbLin[0] + YCOEF[1]*rgbLin[1] + YCOEF[2]*rgbLin[2];
+}
+function entropy(p){
+  return -p.reduce((a,v)=>a+(v>1e-12 ? v*Math.log2(v) : 0),0);
+}
+function kl(p,q){
+  return p.reduce((a,v,i)=>a+(v>1e-12 ? v*Math.log2(v/q[i]) : 0),0);
+}
+function hueAngle(rgbSrgb){
+  const [h] = rgbToHsl(rgbSrgb[0], rgbSrgb[1], rgbSrgb[2]);
+  return h*360;
+}
+function rgbToPiFromDisplay(rgb){
+  const lin = rgb.map(srgbToLinear);
+  return normalize(lin);
+}
+function maxAlphaToBoundary(pDir){
+  const d = pDir.map((v,i)=>v-U[i]);
+  const vals = [];
+  for(let i=0;i<3;i++){
+    if(Math.abs(d[i]) < 1e-12) continue;
+    if(d[i] > 0) vals.push((1-U[i])/d[i]);
+    else vals.push((0-U[i])/d[i]);
+  }
+  const pos = vals.filter(v=>Number.isFinite(v) && v>0);
+  return pos.length ? Math.min(...pos) : 0;
+}
+function piAlongBudget(basePi, t){
+  const alphaMax = maxAlphaToBoundary(basePi);
+  const alpha = t * alphaMax;
+  const d = basePi.map((v,i)=>v-U[i]);
+  const p = U.map((u,i)=>u + alpha*d[i]);
+  return normalize(p.map(clamp01));
+}
+function rgbFromPiAndEll(pi, ell){
+  const yDir = luminanceLinear(pi);
+  const targetScale = ell / Math.max(yDir, 1e-12);
+  const gamutScale = 1 / Math.max(...pi);
+  const scale = Math.min(targetScale, gamutScale);
+  const lin = pi.map(v=>v*scale);
+  return lin.map(linearToSrgb);
+}
+
+const samplePos = {
+  sky: {x: 0.28, y: 0.22},
+  sun: {x: 0.53, y: 0.58}
+};
+
+function positionChips(){
+  ['Hsl','Scs'].forEach(prefix=>{
+    const wrap = document.getElementById('canvas'+prefix).parentElement;
+    const sky = document.getElementById('chip'+prefix+'Sky');
+    const sun = document.getElementById('chip'+prefix+'Sun');
+    sky.style.left = (samplePos.sky.x*100)+'%';
+    sky.style.top = (samplePos.sky.y*100)+'%';
+    sun.style.left = (samplePos.sun.x*100)+'%';
+    sun.style.top = (samplePos.sun.y*100)+'%';
+  });
+}
+
+function piScaledFromBase(basePi, sat){
+  return normalize(U.map((u,i) => u + sat*(basePi[i] - u)));
+}
+function buildSceneColors(tBright, tSat){
+  const sky = hexToRgb(document.getElementById('pickSky').value);
+  const sun = hexToRgb(document.getElementById('pickSun').value);
+  const basePiSky = rgbToPiFromDisplay(sky);
+  const basePiSun = rgbToPiFromDisplay(sun);
+
+  const hsl = (() => {
+    const [hSky,sSky0] = rgbToHsl(...sky);
+    const [hSun,sSun0] = rgbToHsl(...sun);
+    const sSky = clamp01(lerp(0, 1, tSat) * sSky0 + (1-sSky0)*tSat*0.35);
+    const sSun = clamp01(lerp(0, 1, tSat) * sSun0 + (1-sSun0)*tSat*0.35);
+    return {
+      skyTop: hslToRgb(hSky, sSky, lerp(0.18, 0.96, smoothstep(tBright))),
+      skyBottom: hslToRgb(hSky, sSky*0.95, lerp(0.10, 0.78, smoothstep(tBright))),
+      sunColor: hslToRgb(hSun, sSun, lerp(0.28, 0.98, smoothstep(tBright))),
+      haloColor: hslToRgb(hSun, sSun*0.85, clamp01(lerp(0.26, 0.92, smoothstep(tBright))))
+    };
+  })();
+
+  const piSky = piScaledFromBase(basePiSky, tSat);
+  const piSun = piScaledFromBase(basePiSun, tSat);
+
+  const scs = {
+    skyTop: rgbFromPiAndEll(piSky, lerp(0.12, 0.92, smoothstep(tBright))),
+    skyBottom: rgbFromPiAndEll(piSky, lerp(0.06, 0.62, smoothstep(tBright))),
+    sunColor: rgbFromPiAndEll(piSun, lerp(0.22, 0.98, smoothstep(tBright))),
+    haloColor: rgbFromPiAndEll(piSun, lerp(0.18, 0.78, smoothstep(tBright))),
+    piSky, piSun
+  };
+  return {hsl, scs};
+}
+
+function paintScene(ctx, w, h, colors){
+  ctx.clearRect(0,0,w,h);
+  const g = ctx.createLinearGradient(0,0,0,h);
+  g.addColorStop(0, rgbCss(colors.skyTop));
+  g.addColorStop(1, rgbCss(colors.skyBottom));
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,w,h);
+
+  const cx=w*0.53, cy=h*0.58, r=h*0.14;
+  const halo = ctx.createRadialGradient(cx,cy,r*0.2,cx,cy,r*2.8);
+  const haloRgb = colors.haloColor.map(v=>Math.round(v*255));
+  halo.addColorStop(0, `rgba(${haloRgb[0]},${haloRgb[1]},${haloRgb[2]},0.9)`);
+  halo.addColorStop(0.45, `rgba(${haloRgb[0]},${haloRgb[1]},${haloRgb[2]},0.22)`);
+  halo.addColorStop(1, `rgba(${haloRgb[0]},${haloRgb[1]},${haloRgb[2]},0.0)`);
+  ctx.fillStyle = halo;
+  ctx.fillRect(0,0,w,h);
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI*2);
+  ctx.fillStyle = rgbCss(colors.sunColor);
+  ctx.fill();
+
+  const haze = ctx.createLinearGradient(0,h*0.45,0,h);
+  haze.addColorStop(0,'rgba(255,255,255,0)');
+  haze.addColorStop(1,'rgba(255,210,170,0.10)');
+  ctx.fillStyle = haze;
+  ctx.fillRect(0,h*0.35,w,h*0.65);
+}
+
+function updateBudgetCard(kind, pi, ell){
+  const rgb = rgbFromPiAndEll(pi, ell);
+  const S = kl(pi, U);
+  const L = entropy(pi);
+  const theta = hueAngle(rgb);
+  const prefix = kind === 'sky' ? 'sky' : 'sun';
+  document.getElementById(prefix+'Swatch').style.background = rgbCss(rgb);
+  document.getElementById(prefix+'Formula').textContent =
+    'SCS(' + (ell*100).toFixed(1) + '% ; ' +
+    (pi[0]*100).toFixed(1) + '%, ' + (pi[1]*100).toFixed(1) + '%, ' + (pi[2]*100).toFixed(1) +
+    '%)   |   S=' + S.toFixed(3) + '   L=' + L.toFixed(3) + '   S+L=' + (S+L).toFixed(3);
+  document.getElementById(prefix+'FillS').style.width = (S/LOG2_3*100).toFixed(1)+'%';
+  document.getElementById(prefix+'FillL').style.width = (L/LOG2_3*100).toFixed(1)+'%';
+  document.getElementById(prefix+'ValS').textContent = S.toFixed(3);
+  document.getElementById(prefix+'ValL').textContent = L.toFixed(3);
+  document.getElementById(prefix+'ValSL').textContent = (S+L).toFixed(3);
+  document.getElementById(prefix+'Pi').textContent = '(' + pi.map(v=>v.toFixed(3)).join(', ') + ')';
+  document.getElementById(prefix+'Theta').textContent = theta.toFixed(1) + '°';
+}
+
+function render(){
+  const tBright = Number(document.getElementById('brightSlider').value)/100;
+  const tSat = Number(document.getElementById('satSlider').value)/100;
+  document.getElementById('brightVal').textContent = Math.round(tBright*100)+'%';
+  document.getElementById('satVal').textContent = Math.round(tSat*100)+'%';
+  document.getElementById('hslReadout').textContent = 'L = ' + Math.round(tBright*100) + '%, S = ' + Math.round(tSat*100) + '%';
+  document.getElementById('scsReadout').textContent = 'ℓ = ' + Math.round(tBright*100) + '%, S = ' + Math.round(tSat*100) + '%';
+
+  const colors = buildSceneColors(tBright, tSat);
+  paintScene(document.getElementById('canvasHSL').getContext('2d'), 920, 575, colors.hsl);
+  paintScene(document.getElementById('canvasSCS').getContext('2d'), 920, 575, colors.scs);
+
+  updateBudgetCard('sky', colors.scs.piSky, lerp(0.56, 0.80, smoothstep(tBright)));
+  updateBudgetCard('sun', colors.scs.piSun, lerp(0.68, 0.98, smoothstep(tBright)));
+  positionChips();
+}
+
+document.getElementById('pickSky').addEventListener('input', render);
+document.getElementById('pickSun').addEventListener('input', render);
+document.getElementById('brightSlider').addEventListener('input', render);
+document.getElementById('satSlider').addEventListener('input', render);
+
+applyLanguage(currentLang);
+render();
+window.addEventListener('resize', positionChips);
+</script>
+</body>
+</html>

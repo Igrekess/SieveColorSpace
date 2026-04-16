@@ -78,7 +78,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--gold)}
   <section class="hero">
     <div class="eyebrow" data-i18n="heroEyebrow">Navigation</div>
     <p data-i18n="heroText">
-      Use this page as a simple entry point. The four modules are local HTML demos. The saturation study opens the public study page hosted online.
+      Use this page as a simple entry point. The six modules are local HTML demos. The saturation study opens the public study page hosted online.
     </p>
   </section>
 
@@ -144,6 +144,37 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--gold)}
         </div>
       </article>
 
+
+      <article class="card">
+        <div class="card-top">
+          <div>
+            <div class="badge">05</div>
+          </div>
+          <h2 data-i18n="m5Title">Highlight Color Preservation</h2>
+        </div>
+        <p data-i18n="m5Desc">
+          Compare a classical highlight compression with an SCS approach that tries to preserve the chromatic identity of bright regions.
+        </p>
+        <div class="links">
+          <a class="btn" href="module05_highlight_color_preservation.html" data-i18n="openModule">Open module</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div>
+            <div class="badge">06</div>
+          </div>
+          <h2 data-i18n="m6Title">Color Cast Separation</h2>
+        </div>
+        <p data-i18n="m6Desc">
+          Compare a classical cast correction with an SCS version that tries to neutralize the global cast while preserving local chromatic coherence.
+        </p>
+        <div class="links">
+          <a class="btn" href="module06_color_cast_separation.html" data-i18n="openModule">Open module</a>
+        </div>
+      </article>
+
       <article class="card study" style="grid-column:1 / -1">
         <div class="card-top">
           <div>
@@ -161,7 +192,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--gold)}
     </div>
 
     <p class="footer-note" data-i18n-html="footerNote">
-      Expected local filenames: <code>module01_read_a_color_in_scs.html</code>, <code>module02_the_sunset_example.html</code>, <code>module03_skin_tone_protection.html</code>, <code>module04_equilibrium.html</code>.
+      Expected local filenames: <code>module01_read_a_color_in_scs.html</code>, <code>module02_the_sunset_example.html</code>, <code>module03_skin_tone_protection.html</code>, <code>module04_equilibrium.html</code>, <code>module05_highlight_color_preservation.html</code>, <code>module06_color_cast_separation.html</code>.
     </p>
   </section>
 </main>
@@ -172,7 +203,7 @@ const I18N = {
     headerTitle: "Demo Index",
     tagline: "Cette page rassemble les modules de démonstration SCS et l’étude publique de saturation en un seul endroit.",
     heroEyebrow: "Navigation",
-    heroText: "Utilisez cette page comme point d’entrée simple. Les quatre modules sont des démos HTML locales. L’étude de saturation ouvre la page publique de l’étude, hébergée en ligne.",
+    heroText: "Utilisez cette page comme point d’entrée simple. Les six modules sont des démos HTML locales. L’étude de saturation ouvre la page publique de l’étude, hébergée en ligne.",
     m1Title: "Read a Color in SCS",
     m1Desc: "Lecture interactive d’une couleur en termes de mode ℓRGB / simplexe, avec contrôles de luminance, direction chromatique et saturation.",
     m2Title: "The Sunset Example",
@@ -181,17 +212,21 @@ const I18N = {
     m3Desc: "Comparaison entre boost de saturation HSL et boost géodésique SCS, centrée sur la préservation de la carnation et de la direction de teinte.",
     m4Title: "Equilibrium",
     m4Desc: "Chargez une image et déplacez-la le long d’un axe global d’équilibre luminance / saturation, avec protections optionnelles pour les zones sensibles.",
+    m5Title: "Highlight Color Preservation",
+    m5Desc: "Compare une compression classique des hautes lumières à une approche SCS qui cherche à préserver l’identité chromatique des régions lumineuses.",
+    m6Title: "Color Cast Separation",
+    m6Desc: "Compare une correction classique de dominante à une version SCS qui cherche à neutraliser la dominante globale tout en préservant la cohérence chromatique locale.",
     studyTitle: "Saturation Study",
     studyDesc: "Ouvre l’étude en ligne pour participer à l’expérience sur la saturation et accéder à l’interface dédiée.",
     openModule: "Ouvrir le module",
     participateStudy: "Participer à l’étude",
-    footerNote: "Noms de fichiers locaux attendus : <code>module01_read_a_color_in_scs.html</code>, <code>module02_the_sunset_example.html</code>, <code>module03_skin_tone_protection.html</code>, <code>module04_equilibrium.html</code>."
+    footerNote: "Noms de fichiers locaux attendus : <code>module01_read_a_color_in_scs.html</code>, <code>module02_the_sunset_example.html</code>, <code>module03_skin_tone_protection.html</code>, <code>module04_equilibrium.html</code>, <code>module05_highlight_color_preservation.html</code>, <code>module06_color_cast_separation.html</code>."
   },
   en: {
     headerTitle: "Demo Index",
     tagline: "This page gathers the SCS demonstration modules and the public saturation study in one place.",
     heroEyebrow: "Navigation",
-    heroText: "Use this page as a simple entry point. The four modules are local HTML demos. The saturation study opens the public study page hosted online.",
+    heroText: "Use this page as a simple entry point. The six modules are local HTML demos. The saturation study opens the public study page hosted online.",
     m1Title: "Read a Color in SCS",
     m1Desc: "Interactive reading of a color in ℓRGB / simplex terms, with luminance, chromatic direction, and saturation controls.",
     m2Title: "The Sunset Example",
@@ -200,11 +235,15 @@ const I18N = {
     m3Desc: "Comparison between HSL and geodesic SCS saturation boost, focused on preserving complexion and hue direction.",
     m4Title: "Equilibrium",
     m4Desc: "Load an image and move it along a global luminance / saturation balance axis, with optional protections for sensitive regions.",
+    m5Title: "Highlight Color Preservation",
+    m5Desc: "Compare a classical highlight compression with an SCS approach that tries to preserve the chromatic identity of bright regions.",
+    m6Title: "Color Cast Separation",
+    m6Desc: "Compare a classical cast correction with an SCS version that tries to neutralize the global cast while preserving local chromatic coherence.",
     studyTitle: "Saturation Study",
     studyDesc: "Open the online study to participate in the saturation experiment and access the dedicated study interface.",
     openModule: "Open module",
     participateStudy: "Participate in the study",
-    footerNote: "Expected local filenames: <code>module01_read_a_color_in_scs.html</code>, <code>module02_the_sunset_example.html</code>, <code>module03_skin_tone_protection.html</code>, <code>module04_equilibrium.html</code>."
+    footerNote: "Expected local filenames: <code>module01_read_a_color_in_scs.html</code>, <code>module02_the_sunset_example.html</code>, <code>module03_skin_tone_protection.html</code>, <code>module04_equilibrium.html</code>, <code>module05_highlight_color_preservation.html</code>, <code>module06_color_cast_separation.html</code>."
   }
 };
 

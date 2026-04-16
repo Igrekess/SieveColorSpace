@@ -89,6 +89,16 @@ input[type="range"]::-moz-range-thumb {
 }
 .m3-thumb:hover { opacity: 0.85; border-color: var(--gold); }
 .m3-thumb.active { opacity: 1; border-color: var(--gold); box-shadow: 0 0 8px rgba(200,168,78,0.35); }
+.m3-thumb.upload-slot{
+  display:flex; align-items:center; justify-content:center;
+  background:#101010; color:var(--gold); font-size:.72rem; font-weight:700; letter-spacing:.04em;
+}
+.upload-box{
+  border:1px dashed var(--border); border-radius:10px; padding:12px 14px; background:#0d0d0d;
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:1rem;
+}
+.upload-box input[type="file"]{color:var(--text-dim); max-width:100%}
+.helper-note{font-size:.76rem; color:var(--text-dim); line-height:1.45}
 .theory {
   margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;
   color: var(--text-dim); font-size: 0.85rem; line-height: 1.7;
@@ -127,9 +137,16 @@ canvas { width: 100%; display: block; border-radius: var(--radius); }
       <span data-i18n-html="desc">Augmenter la saturation est courant en retouche photo. HSL traite tous les pixels de la même façon — les tons chair virent à l'orange. Le SCS ajuste le long de la géodésique du simplexe : les couleurs deviennent plus vives tout en préservant la direction de teinte.</span>
     </p>
 
-    <div style="display:flex; gap:0.8rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap;">
+    <div style="display:flex; gap:0.8rem; align-items:center; margin-bottom:.45rem; flex-wrap:wrap;">
       <label style="font-size:0.8rem; color:var(--text-dim);" data-i18n="imageLabel">Image :</label>
       <div id="thumbs"></div>
+    </div>
+    <div class="helper-note" style="margin-bottom:1rem;" data-i18n="demoNote">Les 3 portraits de démo sont générés par IA.</div>
+
+    <div class="upload-box">
+      <label style="font-size:0.8rem; color:var(--text-dim);" for="m3-file" data-i18n="uploadLabel">Charger sa propre image :</label>
+      <input type="file" id="m3-file" accept="image/*">
+      <span class="helper-note" data-i18n="uploadNote">L’image chargée remplit la 4e vignette et se comporte comme les autres.</span>
     </div>
 
     <div class="panel" style="margin-bottom:1rem;">
@@ -182,6 +199,10 @@ const I18N = {
     title: "Protection des tons chair",
     desc: "Augmenter la saturation est courant en retouche photo. HSL traite tous les pixels de la même façon — les tons chair virent à l'orange. Le SCS ajuste le long de la géodésique du simplexe : les couleurs deviennent plus vives tout en préservant la direction de teinte.",
     imageLabel: "Image :",
+    demoNote: "Les 3 portraits de démo sont générés par IA.",
+    uploadLabel: "Charger sa propre image :",
+    uploadNote: "L’image chargée remplit la 4e vignette et se comporte comme les autres.",
+    uploadSlot: "Perso",
     boostLabel: "Boost de saturation",
     hslTitle: "HSL (boost uniforme)",
     hslNote: "À 0% : image originale. Ensuite, multiplication uniforme de S.",
@@ -197,6 +218,10 @@ const I18N = {
     title: "Skin-tone protection",
     desc: "Increasing saturation is common in photo retouching. HSL treats all pixels the same way — skin tones drift toward orange. SCS adjusts along the simplex geodesic: colors become more vivid while preserving hue direction.",
     imageLabel: "Image:",
+    demoNote: "The 3 demo portraits are AI-generated.",
+    uploadLabel: "Load your own image:",
+    uploadNote: "The uploaded image fills the 4th thumbnail and behaves like the others.",
+    uploadSlot: "Custom",
     boostLabel: "Saturation boost",
     hslTitle: "HSL (uniform boost)",
     hslNote: "At 0%: original image. Then, uniform multiplication of S.",
@@ -230,6 +255,8 @@ function applyLanguage(lang) {
   document.getElementById('scsNoteText').textContent = I18N[lang].scsNote;
   document.getElementById('lang-fr').classList.toggle('active', lang === 'fr');
   document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+  const uploadSlot = document.getElementById('m3-upload-slot');
+  if (uploadSlot && !uploadSlot.dataset.filled) uploadSlot.textContent = I18N[lang].uploadSlot;
 }
 
 document.getElementById('lang-fr').addEventListener('click', () => applyLanguage('fr'));
@@ -350,18 +377,42 @@ const M3_IMAGES = [
 
 ];
 let m3CurrentImg = 0;
+let m3UploadedSrc = null;
 
 function buildThumbs() {
   const box = document.getElementById('thumbs');
   box.innerHTML = '';
+
   M3_IMAGES.forEach((src, idx) => {
     const img = document.createElement('img');
-    img.className = 'm3-thumb' + (idx === 0 ? ' active' : '');
+    img.className = 'm3-thumb' + (m3CurrentImg === idx ? ' active' : '');
     img.src = src;
     img.alt = 'Portrait ' + (idx + 1);
     img.addEventListener('click', () => m3SelectImage(idx));
     box.appendChild(img);
   });
+
+  const upload = document.createElement('button');
+  upload.type = 'button';
+  upload.id = 'm3-upload-slot';
+  upload.className = 'm3-thumb upload-slot' + (m3CurrentImg === -1 ? ' active' : '');
+  upload.dataset.filled = m3UploadedSrc ? '1' : '';
+  if (m3UploadedSrc) {
+    upload.style.backgroundImage = `linear-gradient(rgba(0,0,0,.15), rgba(0,0,0,.15)), url("${m3UploadedSrc}")`;
+    upload.style.backgroundSize = 'cover';
+    upload.style.backgroundPosition = 'center';
+    upload.textContent = '';
+  } else {
+    upload.textContent = I18N[currentLang].uploadSlot;
+  }
+  upload.addEventListener('click', () => {
+    if (m3UploadedSrc) {
+      m3SelectImage(-1);
+    } else {
+      document.getElementById('m3-file').click();
+    }
+  });
+  box.appendChild(upload);
 }
 
 function copyOriginalToCanvases() {
@@ -376,7 +427,7 @@ function copyOriginalToCanvases() {
 
 function m3SelectImage(idx) {
   m3CurrentImg = idx;
-  document.querySelectorAll('.m3-thumb').forEach((t, i) => t.classList.toggle('active', i === idx));
+  buildThumbs();
   m3Loaded = false;
   m3Init();
 }
@@ -430,7 +481,7 @@ function m3Init() {
     slider.value = 0;
     document.getElementById('m3-boost-val').textContent = '+0%';
   };
-  img.src = M3_IMAGES[m3CurrentImg];
+  img.src = (m3CurrentImg === -1 && m3UploadedSrc) ? m3UploadedSrc : M3_IMAGES[m3CurrentImg];
 }
 
 function m3Render(boost) {
@@ -524,10 +575,25 @@ document.getElementById('m3-boost').addEventListener('input', function() {
   m3Render(v / 100);
 });
 
-buildThumbs();
-m3Init();
+document.getElementById('m3-file').addEventListener('change', function(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    m3UploadedSrc = ev.target.result;
+    m3CurrentImg = -1;
+    buildThumbs();
+    m3Loaded = false;
+    m3Init();
+    e.target.value = '';
+  };
+  reader.readAsDataURL(file);
+});
 
 applyLanguage(currentLang);
+buildThumbs();
+m3Init();
 
 </script>
 

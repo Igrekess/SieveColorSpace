@@ -109,13 +109,7 @@ function renderTrial() {
   document.getElementById("anonCode").textContent = anonymousCode || "…";
   document.getElementById("counts").textContent = `${setup.patch_count} ${t('patches').toLowerCase()} · ${setup.series_count} ${t('series').toLowerCase()}`;
 
-  const ref = hslToRgb(
-    currentTrial.hue,
-    currentTrial.reference_saturation,
-    currentTrial.lightness,
-  );
-  document.getElementById("reference").style.background = rgbCss(ref);
-  document.getElementById("referenceMeta").textContent =
+  document.getElementById("familyLabel").textContent =
     `${currentTrial.family_name} — ${t('fixedHL')}`;
 
   const box = document.getElementById("swatches");
@@ -178,9 +172,7 @@ async function finishStudy() {
 }
 window.onLanguageApplied = function(){
   if (participantId) renderTrial();
-  document.querySelector('[data-i18n="testTitle"]').textContent = t('testTitle');
   document.querySelector('[data-i18n="siteTagline"]').textContent = t('siteTagline');
-  document.querySelector('[data-i18n="referenceTitle"]').textContent = t('referenceTitle');
   document.getElementById("instruction").textContent = t('instruction');
 };
 (async function boot() {

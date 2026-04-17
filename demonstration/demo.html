@@ -122,7 +122,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--gold)}
           <h2 data-i18n="m3Title">Skin Tone Protection</h2>
         </div>
         <p data-i18n="m3Desc">
-          Comparison between HSL and geodesic SCS saturation boost, focused on preserving complexion and hue direction.
+          Comparison between HSL uniform saturation boost and radial SCS boost on the γ-weighted simplex, focused on preserving complexion and chromatic direction.
         </p>
         <div class="links">
           <a class="btn" href="module03_skin_tone_protection.html" data-i18n="openModule">Open module</a>
@@ -183,7 +183,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--gold)}
           <h2 data-i18n="m7Title">Black &amp; White from SCS</h2>
         </div>
         <p data-i18n="m7Desc">
-          Compare a classical black-and-white conversion with an SCS-inspired version that translates chromatic structure into additional tonal separation.
+          Compare a classical grayscale conversion with the SCS version that translates chromatic structure into tonal separation via S·cos(θ) offset.
         </p>
         <div class="links">
           <a class="btn" href="module07_black_and_white_from_scs.html" data-i18n="openModule">Open module</a>
@@ -254,7 +254,7 @@ const I18N = {
     m2Title: "The Sunset Example",
     m2Desc: "Démonstration d’une scène de coucher de soleil à fort contraste pour comparer HSL et SCS, avec lecture de structure locale et de budget.",
     m3Title: "Skin Tone Protection",
-    m3Desc: "Comparaison entre boost de saturation HSL et boost géodésique SCS, centrée sur la préservation de la carnation et de la direction de teinte.",
+    m3Desc: "Comparaison entre boost de saturation HSL uniforme et boost radial SCS sur le simplexe γ-pondéré, centrée sur la préservation de la carnation et de la direction chromatique.",
     m4Title: "Equilibrium",
     m4Desc: "Chargez une image et déplacez-la le long d’un axe global d’équilibre luminance / saturation, avec protections optionnelles pour les zones sensibles.",
     m5Title: "Highlight Color Preservation",
@@ -262,7 +262,7 @@ const I18N = {
     m6Title: "Color Cast Separation",
     m6Desc: "Compare une correction classique de dominante à une version SCS qui cherche à neutraliser la dominante globale tout en préservant la cohérence chromatique locale.",
     m7Title: "Noir et blanc depuis le SCS",
-    m7Desc: "Compare une conversion noir et blanc classique à une version inspirée du SCS qui traduit la structure chromatique en séparation tonale supplémentaire.",
+    m7Desc: "Compare une conversion en niveaux de gris classique à la version SCS qui traduit la structure chromatique en séparation tonale via l'offset S·cos(θ).",
     m8Title: "SCS vs CIELAB — région sombre",
     m8Desc: "Démonstration visuelle et mathématique du pourquoi le SCS sépare le détail des ombres que CIELAB comprime — échelle sombre, courbes de sensibilité, et la référence r = 0,625 vs 0,558 sur COMBVD.",
     m9Title: "SCS vs OkLab",
@@ -283,7 +283,7 @@ const I18N = {
     m2Title: "The Sunset Example",
     m2Desc: "Demonstration of a high-contrast sunset scene to compare HSL and SCS, with local structure and budget reading.",
     m3Title: "Skin Tone Protection",
-    m3Desc: "Comparison between HSL and geodesic SCS saturation boost, focused on preserving complexion and hue direction.",
+    m3Desc: "Comparison between HSL uniform saturation boost and radial SCS boost on the γ-weighted simplex, focused on preserving complexion and chromatic direction.",
     m4Title: "Equilibrium",
     m4Desc: "Load an image and move it along a global luminance / saturation balance axis, with optional protections for sensitive regions.",
     m5Title: "Highlight Color Preservation",
@@ -291,7 +291,7 @@ const I18N = {
     m6Title: "Color Cast Separation",
     m6Desc: "Compare a classical cast correction with an SCS version that tries to neutralize the global cast while preserving local chromatic coherence.",
     m7Title: "Black & White from SCS",
-    m7Desc: "Compare a classical black-and-white conversion with an SCS-inspired version that translates chromatic structure into additional tonal separation.",
+    m7Desc: "Compare a classical grayscale conversion with the SCS version that translates chromatic structure into tonal separation via S·cos(θ) offset.",
     m8Title: "SCS vs CIELAB — dark region",
     m8Desc: "Visual and mathematical demonstration of why SCS separates shadow detail that CIELAB compresses — dark-region ladder, sensitivity curves, and the r = 0.625 vs 0.558 benchmark on COMBVD.",
     m9Title: "SCS vs OkLab",

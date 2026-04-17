@@ -244,11 +244,11 @@ def verify_all():
 
     # 7. Koide saturation
     print(f"\n--- Koide optimal saturation ---")
-    S_max = np.log2(3)
+    S_max = np.log(3)
     S_koide = S_max / np.sqrt(2)
     S_koide_pct = S_koide / S_max * 100
-    print(f"  S_max   = log2(3) = {S_max:.6f} bits")
-    print(f"  S_Koide = S_max/sqrt(2) = {S_koide:.6f} bits")
+    print(f"  S_max   = log 3 = {S_max:.6f} nats")
+    print(f"  S_Koide = S_max/sqrt(2) = {S_koide:.6f} nats")
     print(f"  S_Koide/S_max = 1/sqrt(2) = {S_koide_pct:.2f}%")
     check = abs(S_koide_pct - 70.71) < 0.1
     print(f"  ~70.7%: {'PASS' if check else 'FAIL'}")
@@ -372,34 +372,34 @@ def fig_chromatic_simplex():
 
 def fig_conservation():
     """
-    Figure 2: The conservation law S + L = log2(3).
-    Saturation vs luminance trade-off.
+    Figure 2: The sum rule S + L = log 3 (natural log, nats).
+    Saturation vs chromatic entropy trade-off.
     """
     fig, ax = plt.subplots(1, 1, figsize=(8, 6))
 
-    log2_3 = np.log2(3)
+    log3 = np.log(3)
 
-    # The conservation line
-    S = np.linspace(0, log2_3, 200)
-    L = log2_3 - S
-    ax.plot(S, L, 'k-', linewidth=2.5, label='$S + L = \\log_2 3$ (GFT)')
+    # The sum-rule line
+    S = np.linspace(0, log3, 200)
+    L = log3 - S
+    ax.plot(S, L, 'k-', linewidth=2.5, label='$S + L = \\log 3$ (sum rule)')
 
     # Fill regions
     ax.fill_between(S, L, alpha=0.05, color='blue')
 
     # Mark key points
     points = {
-        'Blanc\n(centre)': (0, log2_3),
-        'Rouge pur\n(sommet)': (log2_3, 0),
-        'Koide\n$1/\\sqrt{2}$': (log2_3/np.sqrt(2), log2_3*(1 - 1/np.sqrt(2))),
+        'Blanc\n(centre)': (0, log3),
+        'Rouge pur\n(sommet)': (log3, 0),
+        'Koide\n$1/\\sqrt{2}$': (log3/np.sqrt(2), log3*(1 - 1/np.sqrt(2))),
     }
 
     artists = {
-        'Caravage': (log2_3*0.85, log2_3*0.15, '#8B0000', 's'),
-        'Turner':   (log2_3*0.15, log2_3*0.85, '#DAA520', 'D'),
-        'Vermeer':  (log2_3*0.68, log2_3*0.32, '#4169E1', 'o'),
-        'Soulages': (log2_3*0.02, log2_3*0.98, '#333333', 'v'),
-        'Richter':  (log2_3*0.50, log2_3*0.50, '#666666', '^'),
+        'Caravage': (log3*0.85, log3*0.15, '#8B0000', 's'),
+        'Turner':   (log3*0.15, log3*0.85, '#DAA520', 'D'),
+        'Vermeer':  (log3*0.68, log3*0.32, '#4169E1', 'o'),
+        'Soulages': (log3*0.02, log3*0.98, '#333333', 'v'),
+        'Richter':  (log3*0.50, log3*0.50, '#666666', '^'),
     }
 
     for name, (sx, ly) in points.items():
@@ -414,14 +414,14 @@ def fig_conservation():
                    xytext=(10, -10), fontsize=10, fontstyle='italic', color=color)
 
     # Koide line
-    sk = log2_3/np.sqrt(2)
+    sk = log3/np.sqrt(2)
     ax.axvline(x=sk, color='#CC6600', linestyle='--', alpha=0.5, linewidth=1.5)
 
     ax.set_xlabel('Saturation  $S = D_{KL}(\\pi \\| u)$  [nats]', fontsize=12)
     ax.set_ylabel('Luminance  $L = H(\\pi)$  [nats]', fontsize=12)
-    ax.set_title('Loi de conservation chromatique (GFT)', fontsize=14)
-    ax.set_xlim(-0.05, log2_3 + 0.1)
-    ax.set_ylim(-0.05, log2_3 + 0.1)
+    ax.set_title('Règle de somme chromatique (S + L = log 3)', fontsize=14)
+    ax.set_xlim(-0.05, log3 + 0.1)
+    ax.set_ylim(-0.05, log3 + 0.1)
     ax.legend(fontsize=11, loc='upper right')
     ax.grid(True, alpha=0.3)
 

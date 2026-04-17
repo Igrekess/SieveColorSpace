@@ -30,8 +30,8 @@ Predict visual-difference (DV) ratings on COMBVD pairs restricted to the dark re
 
 | Method | r (L\* < 25) | Parameters | Bootstrap 95% CI | Script | Date |
 |--------|--------------|-----------|------------------|--------|------|
-| CIELAB | 0.558 | 3 | — | `scripts/delta_e_scs00.py --region dark` | — |
-| **SCS (pure Fisher-Bernoulli)** | **0.625** | **0** | (pending, see issue #TODO) | `scripts/delta_e_scs00.py --region dark --pure` | 2026-04 |
+| CIELAB | 0.558 | 3 | — | reported in `scripts/delta_e_scs00.py` output (dark-region split) | — |
+| **SCS (pure Fisher-Bernoulli)** | **0.625** | **0** | (pending, see issue #TODO) | reported in `scripts/delta_e_scs00.py` output (dark-region split) | 2026-04 |
 | your entry | — | — | — | — | — |
 
 Note: the significance of the 0.625 / 0.558 gap has not yet been formally tested. A bootstrap CI submission is itself a welcome contribution.

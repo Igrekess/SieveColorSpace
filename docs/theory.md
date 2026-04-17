@@ -42,16 +42,18 @@ On the simplex, two quantities are defined:
 - **Saturation** S = D_KL(pi || uniform) — how far from achromatic
 - **Luminance entropy** L = H(pi) — Shannon entropy of the simplex point
 
-The GFT identity states:
+The sum rule states:
 
 ```
-S + L = log2(3)    (exactly, algebraically)
+S + L = log 3    (exactly, in nats)
 ```
 
-This means: the total informational budget is fixed at ~1.585 bits. If you
-increase saturation, luminance entropy decreases by exactly the same amount.
-This is not a heuristic — it's a mathematical identity that holds for any
-point on the simplex.
+This means: the total informational budget is fixed at `log 3 ≈ 1.0986` nats.
+If saturation increases, chromatic entropy decreases by exactly the same
+amount. This is a generic mathematical identity on any three-outcome
+probability simplex with uniform reference, not a heuristic. What is SCS-
+specific is the choice of three active primes {3, 5, 7} from the sieve, and
+the physical reading of `S` as saturation and `L` as chromatic entropy.
 
 ## The metric
 

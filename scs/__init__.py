@@ -19,8 +19,8 @@ Theory summary:
     - Metric: Fisher (Čencov unique) weighted by γ_p at μ*=15.
     - Distance: Bhattacharyya geodesic on Δ² + Fisher on Bernoulli(ℓ).
     - Balance: w_lum = 3/4, w_chrom = 1/4  (N_active/(N_active+1), T7).
-    - Conservation: D_KL + H = log₂(3)  (GFT, algebraic identity).
-    - Spectral window: {3,5,7} → α_EM → Rydberg → Balmer → 380–656 nm.
+    - Sum rule: D_KL(π||U) + H(π) = log 3  (natural log, nats; generic
+      identity on any probability simplex with uniform reference).
 
 Reference: PT_COLOR.tex (Senez, 2026).
 """
@@ -30,17 +30,18 @@ from dataclasses import dataclass
 
 __version__ = "0.2.0"
 __all__ = ["delta_e", "delta_e_lab", "to_scs", "SCSColor",
+           "fisher_luminance", "saturation", "luminance_entropy", "gft_check",
            "MU_STAR", "GAMMAS", "PRIMES"]
 
 # ============================================================
 # CONSTANTS — all derived from s = 1/2 at μ* = 15
 # ============================================================
 
-MU_STAR = 15                          # unique fixed point (T5)
-S_PARAM = 0.5                         # symmetry parameter (T1)
-Q_REL = 1 - 2 / MU_STAR              # = 13/15 (vertex branch)
-Q_THERM = np.exp(-1 / MU_STAR)       # ≈ 0.9355 (edge branch)
-PRIMES = (3, 5, 7)                    # active primes (T5)
+MU_STAR = 15                          # unique fixed point (T7)
+S_PARAM = 0.5                         # symmetry parameter (T0)
+Q_REL = 1 - 2 / MU_STAR              # = 13/15 (L0)
+Q_THERM = np.exp(-1 / MU_STAR)       # ≈ 0.9355 (L0)
+PRIMES = (3, 5, 7)                    # active primes (T7)
 N_ACTIVE = len(PRIMES)                # = 3
 
 def _delta(p, q=Q_REL):
@@ -116,8 +117,8 @@ def to_scs(xyz, Y_ref=1.0, matrix=None):
 
     ell = np.clip(xyz[1] / Y_ref, 0, 1)
 
-    # Saturation: D_KL(π || uniform)
-    S = float(np.sum(pi[pi > 0] * np.log2(3 * pi[pi > 0])))
+    # Saturation: D_KL(π || uniform), in nats (natural log)
+    S = float(np.sum(pi[pi > 0] * np.log(3 * pi[pi > 0])))
 
     # Hue: angular coordinate on the simplex
     hue = np.degrees(np.arctan2(
@@ -145,7 +146,7 @@ def delta_e(xyz1, xyz2, Y_ref=1.0, matrix=None):
         d_chrom = 2·arccos(Σ √(π̃₁·π̃₂))             Bhattacharyya on Δ²
 
     Derivation chain:
-        s=1/2 → T1 → T5 (μ*=15, N=3) → Fisher (Čencov) → geodesic
+        s=1/2 → T0 → L0 → T7 (μ*=15, N=3) → Fisher (Čencov) → geodesic
 
     Parameters:
         xyz1, xyz2: CIE XYZ tristimulus values (3-vectors)
@@ -174,20 +175,6 @@ def delta_e(xyz1, xyz2, Y_ref=1.0, matrix=None):
     return float(np.sqrt(W_LUM * d_lum**2 + W_CHROM * d_chrom**2))
 
 
-def fisher_luminance(Y1, Y2, Y_ref=100.0):
-    """
-    Fisher-Bernoulli luminance geodesic (standalone).
-
-    d_lum = 2|arcsin(√ℓ₁) - arcsin(√ℓ₂)|
-
-    Used by ΔE_SCS00 to improve CIEDE2000.
-    Zero adjustable parameters — derived from s = 1/2.
-    """
-    ell1 = np.clip(np.asarray(Y1) / Y_ref, 1e-10, 1 - 1e-10)
-    ell2 = np.clip(np.asarray(Y2) / Y_ref, 1e-10, 1 - 1e-10)
-    return 2 * np.abs(np.arcsin(np.sqrt(ell1)) - np.arcsin(np.sqrt(ell2)))
-
-
 def delta_e_lab(L1, a1, b1, L2, a2, b2,
                 white=(0.9505, 1.0, 1.089)):
     """
@@ -204,26 +191,41 @@ def delta_e_lab(L1, a1, b1, L2, a2, b2,
 # CONSERVATION LAW (GFT)
 # ============================================================
 
+def fisher_luminance(Y1, Y2):
+    """
+    Fisher-Bernoulli geodesic between two luminance values Y1, Y2 ∈ [0, 1]:
+        d_lum = 2 |arcsin(√Y1) - arcsin(√Y2)|
+
+    This is the component of ΔE_SCS that operates on the binary (p=2)
+    luminance channel, derived from s = 1/2 with zero fitted parameters.
+    Also used as d_lum in ΔE_SCS00 (see scripts/delta_e_scs00.py).
+    """
+    y1 = float(np.clip(Y1, 1e-6, 1 - 1e-6))
+    y2 = float(np.clip(Y2, 1e-6, 1 - 1e-6))
+    return 2.0 * abs(np.arcsin(np.sqrt(y1)) - np.arcsin(np.sqrt(y2)))
+
+
 def saturation(pi):
-    """D_KL(π || uniform) — saturation. [GFT, D02]"""
+    """D_KL(π || uniform) — saturation, in nats (natural log). [sum rule, D02]"""
     pi = np.asarray(pi, dtype=float)
-    return float(np.sum(pi[pi > 0] * np.log2(3 * pi[pi > 0])))
+    return float(np.sum(pi[pi > 0] * np.log(3 * pi[pi > 0])))
 
 
 def luminance_entropy(pi):
-    """H(π) — perceptual luminance entropy. [GFT, D02]"""
+    """H(π) — chromatic entropy, in nats (natural log). [sum rule, D02]"""
     pi = np.asarray(pi, dtype=float)
-    return float(-np.sum(pi[pi > 0] * np.log2(pi[pi > 0])))
+    return float(-np.sum(pi[pi > 0] * np.log(pi[pi > 0])))
 
 
 def gft_check(pi):
     """
-    Verify GFT: S + L = log₂(3).
+    Verify the SCS sum rule: S + L = log 3 (natural log, in nats).
+    This is a generic identity on any probability simplex with uniform reference.
     Returns (S, L, S+L, error).
     """
     S = saturation(pi)
     L = luminance_entropy(pi)
-    budget = np.log2(3)
+    budget = np.log(3)
     return S, L, S + L, abs(S + L - budget)
 
 

@@ -103,8 +103,8 @@ def xyz_to_scs(xyz):
     # Luminance (normalized Y)
     ell = xyz[1] if len(xyz) > 1 else 1.0
 
-    # Saturation
-    S = np.sum(pi[pi > 0] * np.log2(3 * pi[pi > 0]))
+    # Saturation (nats, natural log — matches paper and SDK convention)
+    S = np.sum(pi[pi > 0] * np.log(3 * pi[pi > 0]))
 
     # Hue angle (barycentric → angular)
     theta = np.arctan2(

@@ -1,5 +1,5 @@
-% PT_COLOR.tex -- Persistence Theory Chromatic System (SCS)
-% A first-principles color space derived from the sieve of Eratosthenes
+% PT_COLOR.tex -- Sieve Color Space (SCS)
+% A sieve-derived geometric layer for color, composable with CIE tools
 \documentclass[12pt,a4paper]{article}
 \usepackage{../shared/pt-common}
 \usepackage[margin=2.5cm]{geometry}
@@ -39,9 +39,9 @@ parameters and are labeled as such throughout the paper.
 
 \medskip\noindent\textbf{Positioning.} SCS is proposed as a principled
 geometric \emph{layer} in a factored color-appearance architecture ---
-alongside iCAM (Fairchild \& Johnson, 2004), CAM02-UCS (Luo et al.,
-2006), and J\textsubscript{z}A\textsubscript{z}B\textsubscript{z}
-(Safdar et al., 2017) --- not as a replacement for the CIE toolkit.
+alongside iCAM~\cite{fairchildjohnson2004}, CAM02-UCS~\cite{luo2006}, and
+J\textsubscript{z}A\textsubscript{z}B\textsubscript{z}~\cite{safdar2017}
+--- not as a replacement for the CIE toolkit.
 Chromatic adaptation, spectral sensitivity beyond the HPE
 linearization, viewing conditions, flare, and observer variability
 are explicitly outside scope (\S\ref{sec:scope_limits}); CIECAM02 and
@@ -55,7 +55,8 @@ $S/S_{\max} = 1/\sqrt{2}$; a CRT-driven chromatic-discrimination
 ceiling at $3 \times 5 \times 7 = 105$ states; and a fourth-channel
 signature from $p = 11$ in tetrachromats. Code, COMBVD splits,
 MacAdam fits, and a public leaderboard are released at
-\href{https://github.com/Igrekess/SieveColorSpace}{github.com/Igrekess/SieveColorSpace}.
+\href{https://github.com/Igrekess/SieveColorSpace}{github.com/Igrekess/SieveColorSpace}
+(archived on Zenodo: \href{https://zenodo.org/records/19614967}{10.5281/zenodo.19614967} for this article; the broader Persistence Theory monograph is at \href{https://zenodo.org/records/19583187}{10.5281/zenodo.19583187}).
 We do not claim SCS is finished; we claim it is testable.
 This article is self-contained: an appendix provides self-contained
 derivations of the Persistence Theory results used --- forbidden sieve
@@ -285,7 +286,7 @@ ordinal here, not spectral.
 \includegraphics[width=0.75\textwidth]{figures_en/fig3_fisher_ellipses.png}
 \caption{Fisher metric ellipses on $\Delta^2$. Small ellipses (green-yellow
 zone) indicate fine discrimination; large ellipses (blue zone) indicate
-coarser discrimination. Compare with MacAdam (1942).}
+coarser discrimination. Compare with MacAdam~\cite{macadam1942}.}
 \label{fig:fisher}
 \end{figure}
 
@@ -293,7 +294,7 @@ coarser discrimination. Compare with MacAdam (1942).}
 \label{sec:infogeo}
 
 For readers from the information-geometry community, this subsection
-states the formal status of the SCS metric in the language of Amari
+states the formal status of the SCS metric in the language of Amari~\cite{amari1985}
 and \v{C}encov, and points out where the construction departs from
 standard information-geometric practice.
 
@@ -629,7 +630,7 @@ consequences follow that neural data can falsify:
 \item The $L{-}M$ isoluminant axis of DKL should carry a weight in V4
   BOLD roughly equal to the ratio $\gamp{3}/(\gamp{3}+\gamp{5}+\gamp{7})
   \approx 0.385$ under stimulus conditions that isolate cone
-  opponency. Preliminary analysis on Conway 2025 (OpenNeuro
+  opponency. Preliminary analysis on Conway~\cite{conway2025} (OpenNeuro
   ds005521) gives a V4 L$-$M weight of $0.373$, a $3.2\%$ agreement
   with the sieve ratio; replication on an independent dataset, with a
   denser DKL stimulus grid, is \S\ref{sec:open_problems}~E3.
@@ -700,7 +701,7 @@ discrimination ellipses with:
 \item RMS orientation error: $37.8^\circ$ (vs $\sim\!52^\circ$ for
   CIELAB, vs $68.5^\circ$ for Fisher alone)
 \item RMS axis ratio error: $0.398$ (vs $\sim\!0.835$ for CIELAB)
-\item Individual wins: 18/25 ellipses (vs 17/25 for CIELAB)
+\item Individual wins on orientation: 18/25 ellipses (vs 7/25 for CIELAB)
 \item Parameters: 0 (vs 3 for CIELAB)
 \end{itemize}
 Validated with both HPE and CIE 2006 (Stockman-Sharpe) cone fundamental
@@ -775,7 +776,7 @@ question is closer to a draw.
 
 \subsection{Berlin--Kay universals}
 
-Berlin and Kay (1969) found that the order in which cultures add color
+Berlin and Kay~\cite{berlinkay1969} found that the order in which cultures add color
 terms is universal: dark/light $\to$ red $\to$ yellow/green $\to$ blue.
 In SCS:
 
@@ -1038,7 +1039,7 @@ $\Delta E^*_{00}$ (CIEDE2000) & 5 & \textbf{0.878} & 28.1 & \textbf{0.884} \\
 \end{tabular}
 \end{center}
 SCS surpasses CIELAB by 12\% in the dark region ($L^* < 25$,
-$n = 176$ pairs), precisely where CIELAB's cube root $f(t) = t^{1/3}$
+$n = 174$ pairs), precisely where CIELAB's cube root $f(t) = t^{1/3}$
 diverges (infinite slope at $t = 0$), while the Fisher--Bernoulli
 geodesic $2|\arcsin\sqrt{\ell_1} - \arcsin\sqrt{\ell_2}|$ remains
 well-conditioned.
@@ -1065,18 +1066,18 @@ perception, each traceable to a PT theorem:
 \toprule
 \textbf{Law} & \textbf{Statement} & \textbf{PT source} & \textbf{CIE?} \\
 \midrule
-E1 & Three independent channels & T5 ($\mustar = 15$) & Assumed \\
-E2 & $S + L = \log 3$ (conservation) & T2 (GFT) & None \\
-E3 & $\sin^2 + \cos^2 = 1$ (complementarity) & T6 (holonomy) & Convention \\
-E4 & Fisher metric is curved & \v{C}encov & Empirical \\
-E5 & Koide equilibrium at $1/\sqrt{2}$ & D17b & None \\
-E6 & Consecutive states must differ & T1 (forbidden) & None \\
-E7 & Hue circle closes ($2\pi$ holonomy) & T6 ($\mathbb{Z}/p\mathbb{Z} \to S^1$) & Convention \\
+L1 & Three independent channels & T5 ($\mustar = 15$) & Assumed \\
+L2 & $S + L = \log 3$ (sum rule) & T2 (GFT) & None \\
+L3 & $\sin^2 + \cos^2 = 1$ (two-branch) & T6 (holonomy) & Convention \\
+L4 & Fisher metric is curved & \v{C}encov & Empirical \\
+L5 & Koide equilibrium at $1/\sqrt{2}$ & D17b & None \\
+L6 & Consecutive states must differ & T1 (forbidden) & None \\
+L7 & Hue circle closes ($2\pi$ holonomy) & T6 ($\mathbb{Z}/p\mathbb{Z} \to S^1$) & Convention \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-CIE addresses only E1 (by assumption) and E4 (empirically). The
+CIE addresses only L1 (by assumption) and L4 (empirically). The
 remaining five laws are invisible to the CIE framework.
 
 % ============================================================
@@ -1855,7 +1856,7 @@ converge on similar qualitative behavior.
 \subsection{Geodesic Skin Tone Protection}
 
 Skin tones occupy a specific region of the simplex $\Delta^2$,
-centered around a hue angle of approximately $30°$ with a half-width
+centered around a hue angle of approximately $30^\circ$ with a half-width
 of $\sim 35°$. The geodesic distance from any pixel's $\pi$ to this
 region provides a natural, continuous protection mask: pixels inside
 the skin zone are shielded from color adjustments (wheels, HSL,
@@ -1865,8 +1866,8 @@ The mask is computed as:
 \[
   w_\mathrm{skin}(\pi) = \frac{1}{2}\left(1 + \cos\frac{\pi\, d(\pi, \pi_\mathrm{skin})}{r}\right) \cdot \min\!\left(1, \frac{S(\pi)}{S_\mathrm{min}}\right)
 \]
-where $d$ is the angular distance on $\Delta^2$, $r = 35°$ is the
-half-width, and $S_\mathrm{min} = 0.15$ bits ensures achromatic
+where $d$ is the angular distance on $\Delta^2$, $r = 35^\circ$ is the
+half-width, and $S_\mathrm{min} = 0.10$ nats ensures achromatic
 pixels (grays) are excluded. The saturation gate prevents false
 positives in neutral regions.
 

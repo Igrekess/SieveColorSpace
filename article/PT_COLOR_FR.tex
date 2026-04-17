@@ -1,5 +1,5 @@
-% PT_COLOR_FR.tex -- Système Sieve Color Space (SCS)
-% Un espace de couleurs dérivé du crible d'Ératosthène
+% PT_COLOR_FR.tex -- Sieve Color Space (SCS)
+% Une couche géométrique pour la couleur, dérivée du crible, composable avec les outils CIE
 \documentclass[12pt,a4paper]{article}
 \usepackage[english,main=french]{babel}
 \usepackage{../shared/pt-common}
@@ -46,9 +46,9 @@ l'article.
 \medskip\noindent\textbf{Positionnement.} Le SCS est propos\'e comme
 \emph{couche} g\'eom\'etrique principielle dans une architecture
 factoris\'ee d'apparence des couleurs --- aux c\^ot\'es d'iCAM
-(Fairchild \& Johnson, 2004), de CAM02-UCS (Luo et al., 2006) et de
+\cite{fairchildjohnson2004}, de CAM02-UCS~\cite{luo2006} et de
 J\textsubscript{z}A\textsubscript{z}B\textsubscript{z}
-(Safdar et al., 2017) --- et non comme rempla\c{c}ant de l'outillage
+\cite{safdar2017} --- et non comme rempla\c{c}ant de l'outillage
 CIE. L'adaptation chromatique, la sensibilit\'e spectrale au-del\`a
 de la lin\'earisation HPE, les conditions d'observation, le
 \emph{flare} et la variabilit\'e inter-observateurs sont
@@ -64,7 +64,8 @@ discrimination chromatique \`a $3 \times 5 \times 7 = 105$ \'etats,
 motiv\'e par le CRT~; et la signature d'un quatri\`eme canal issu de
 $p = 11$ chez les t\'etrachromates. Le code, les d\'ecoupages COMBVD,
 les ajustements MacAdam et un classement public sont diffus\'es
-\`a \href{https://github.com/Igrekess/SieveColorSpace}{github.com/Igrekess/SieveColorSpace}.
+\`a \href{https://github.com/Igrekess/SieveColorSpace}{github.com/Igrekess/SieveColorSpace}
+(archiv\'e sur Zenodo~: \href{https://zenodo.org/records/19614967}{10.5281/zenodo.19614967} pour cet article~; la monographie Th\'eorie de la Persistance associ\'ee est sur \href{https://zenodo.org/records/19583187}{10.5281/zenodo.19583187}).
 Nous ne pr\'etendons pas que le SCS soit achev\'e~; nous affirmons
 qu'il est testable.
 Cet article est autonome~: un appendice fournit les d\'erivations
@@ -319,7 +320,7 @@ en \S\ref{sec:comparison}~; l'accord est ici ordinal, et non spectral.
 \caption{Ellipses de la m\'etrique de Fisher sur $\Delta^2$. Les petites
 ellipses (zone vert-jaune) indiquent une discrimination fine ; les grandes
 ellipses (zone bleue) indiquent une discrimination plus grossi\`ere.
-Comparer avec MacAdam (1942).}
+Comparer avec MacAdam~\cite{macadam1942}.}
 \label{fig:fisher}
 \end{figure}
 
@@ -328,7 +329,7 @@ Comparer avec MacAdam (1942).}
 
 \`A l'intention des lecteurs issus de la g\'eom\'etrie de
 l'information, cette sous-section pr\'ecise le statut formel de la
-m\'etrique SCS dans le langage d'Amari et de \v{C}encov, et signale
+m\'etrique SCS dans le langage d'Amari~\cite{amari1985} et de \v{C}encov~\cite{cencov1982}, et signale
 les points o\`u la construction s'\'ecarte de la pratique standard.
 
 \paragraph{La vari\'et\'e et sa m\'etrique.}
@@ -690,7 +691,7 @@ falsifier~:
   le BOLD de V4 \`a peu pr\`es \'egal au rapport
   $\gamp{3}/(\gamp{3}+\gamp{5}+\gamp{7}) \approx 0{,}385$ dans des
   conditions de stimulation isolant l'opposition des c\^ones. Une
-  analyse pr\'eliminaire sur Conway 2025 (OpenNeuro ds005521) donne
+  analyse pr\'eliminaire sur Conway~\cite{conway2025} (OpenNeuro ds005521) donne
   un poids V4 $L{-}M$ de $0{,}373$, un accord \`a $3{,}2\,\%$ avec le
   rapport du crible~; une r\'eplication sur un jeu de donn\'ees
   ind\'ependant, avec une grille DKL plus dense, fait l'objet de
@@ -846,7 +847,7 @@ proche du match nul.
 
 \subsection{Universaux de Berlin--Kay}
 
-Berlin et Kay (1969) ont d\'ecouvert que l'ordre dans lequel les
+Berlin et Kay~\cite{berlinkay1969} ont d\'ecouvert que l'ordre dans lequel les
 cultures ajoutent des termes de couleur est universel :
 sombre/clair $\to$ rouge $\to$ jaune/vert $\to$ bleu. Dans le SCS :
 
@@ -1132,7 +1133,7 @@ $\Delta E^*_{00}$ (CIEDE2000) & 5 & \textbf{0{,}878} & 28{,}1 & \textbf{0{,}884}
 \end{tabular}
 \end{center}
 Le SCS surpasse CIELAB de 12\,\% dans la r\'egion sombre ($L^* < 25$,
-$n = 176$ paires), pr\'ecis\'ement l\`a o\`u la racine cubique de
+$n = 174$ paires), pr\'ecis\'ement l\`a o\`u la racine cubique de
 CIELAB $f(t) = t^{1/3}$ diverge (pente infinie en $t = 0$), tandis que
 la g\'eod\'esique de Fisher--Bernoulli
 $2|\arcsin\sqrt{\ell_1} - \arcsin\sqrt{\ell_2}|$ reste bien
@@ -1161,18 +1162,18 @@ des couleurs, chacune tra\c{c}able \`a un th\'eor\`eme PT :
 \toprule
 \textbf{Loi} & \textbf{\'Enonc\'e} & \textbf{Source PT} & \textbf{CIE ?} \\
 \midrule
-E1 & Trois canaux ind\'ependants & T5 ($\mustar = 15$) & Postul\'e \\
-E2 & $S + L = \log 3$ (conservation) & T2 (GFT) & Aucun \\
-E3 & $\sin^2 + \cos^2 = 1$ (compl\'ementarit\'e) & T6 (holonomie) & Convention \\
-E4 & La m\'etrique de Fisher est courbe & \v{C}encov & Empirique \\
-E5 & \'Equilibre de Koide \`a $1/\sqrt{2}$ & D17b & Aucun \\
-E6 & \'Etats cons\'ecutifs n\'ecessairement distincts & T1 (interdit) & Aucun \\
-E7 & Le cercle des teintes se ferme (holonomie $2\pi$) & T6 ($\mathbb{Z}/p\mathbb{Z} \to S^1$) & Convention \\
+L1 & Trois canaux ind\'ependants & T5 ($\mustar = 15$) & Postul\'e \\
+L2 & $S + L = \log 3$ (r\`egle de somme) & T2 (GFT) & Aucun \\
+L3 & $\sin^2 + \cos^2 = 1$ (deux branches) & T6 (holonomie) & Convention \\
+L4 & La m\'etrique de Fisher est courbe & \v{C}encov & Empirique \\
+L5 & \'Equilibre de Koide \`a $1/\sqrt{2}$ & D17b & Aucun \\
+L6 & \'Etats cons\'ecutifs n\'ecessairement distincts & T1 (interdit) & Aucun \\
+L7 & Le cercle des teintes se ferme (holonomie $2\pi$) & T6 ($\mathbb{Z}/p\mathbb{Z} \to S^1$) & Convention \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Le CIE ne traite que E1 (par postulat) et E4 (empiriquement). Les cinq
+Le CIE ne traite que L1 (par postulat) et L4 (empiriquement). Les cinq
 lois restantes sont invisibles au cadre CIE.
 
 % ============================================================
@@ -1972,7 +1973,7 @@ l'application.
 Cette propri\'et\'e s'\'etend au transfert entre appareils. \'Etant
 donn\'ees trois images --- source (brut), source (\'etalonn\'e), et
 cible (brut d'un autre appareil) --- le grade
-$\Delta\pi = \pi_\mathrm{\'etalonn\'e} - \pi_\mathrm{source}$ est
+$\Delta\pi = \pi_\mathrm{cal} - \pi_\mathrm{src}$ est
 appliqu\'e aux coordonn\'ees $\pi$ propres de la cible. La
 diff\'erence de capteur entre les deux appareils est automatiquement
 compens\'ee parce que les pixels des deux capteurs vivent sur le m\^eme
@@ -2006,8 +2007,8 @@ qualitativement vers le m\^eme comportement.
 \subsection{Protection g\'eod\'esique des tons chair}
 
 Les tons chair occupent une r\'egion sp\'ecifique du simplexe
-$\Delta^2$, centr\'ee autour d'un angle de teinte d'environ $30°$
-avec une demi-largeur d'environ $35°$. La distance g\'eod\'esique de
+$\Delta^2$, centr\'ee autour d'un angle de teinte d'environ $30^\circ$
+avec une demi-largeur d'environ $35^\circ$. La distance g\'eod\'esique de
 tout pixel $\pi$ \`a cette r\'egion fournit un masque de protection
 naturel et continu~: les pixels dans la zone chair sont prot\'eg\'es
 des ajustements couleur (roues, TSL, temp\'erature), tandis que les
@@ -2017,8 +2018,8 @@ Le masque est calcul\'e comme~:
 \[
   w_\mathrm{chair}(\pi) = \frac{1}{2}\left(1 + \cos\frac{\pi\, d(\pi, \pi_\mathrm{chair})}{r}\right) \cdot \min\!\left(1, \frac{S(\pi)}{S_\mathrm{min}}\right)
 \]
-o\`u $d$ est la distance angulaire sur $\Delta^2$, $r = 35°$ la
-demi-largeur, et $S_\mathrm{min} = 0{,}15$ bits assure que les pixels
+o\`u $d$ est la distance angulaire sur $\Delta^2$, $r = 35^\circ$ la
+demi-largeur, et $S_\mathrm{min} = 0{,}10$ nats assure que les pixels
 achromatiques (gris) sont exclus. La porte de saturation emp\^eche les
 faux positifs dans les r\'egions neutres.
 

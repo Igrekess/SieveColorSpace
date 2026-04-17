@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SCS — Module 03 autonome v2</title>
+<title>SCS — Module 03 - Skin Tone Protection</title>
 <style>
 :root {
   --bg: #0a0a0a;
@@ -119,7 +119,7 @@ canvas { width: 100%; display: block; border-radius: var(--radius); }
 <header style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
   <div>
     <h1><span data-i18n="headerPrefix">Module 03</span> <span>SCS</span> - <span data-i18n="siteTitle">Skin tone protection</span></h1>
-    <p class="tagline" data-i18n="siteTagline">Protection géodésique des teintes chair — 0% = original/original</p>
+    <p class="tagline" data-i18n="siteTagline">Protection radiale des teintes chair — 0% = original/original</p>
   </div>
   <div class="lang-toggle">
     <button class="btn lang-btn" id="lang-fr">FR</button>
@@ -134,7 +134,7 @@ canvas { width: 100%; display: block; border-radius: var(--radius); }
       <h2 data-i18n="title">Protection des tons chair</h2>
     </div>
     <p class="module-desc">
-      <span data-i18n-html="desc">Augmenter la saturation est courant en retouche photo. HSL traite tous les pixels de la même façon — les tons chair virent à l'orange. Le SCS ajuste le long de la géodésique du simplexe : les couleurs deviennent plus vives tout en préservant la direction de teinte.</span>
+      <span data-i18n-html="desc">Augmenter la saturation est courant en retouche photo. HSL traite tous les pixels de la même façon — les tons chair virent à l'orange. Le SCS ajuste chaque pixel le long de son rayon radial sur le simplexe γ-pondéré : les couleurs deviennent plus vives tout en préservant la direction chromatique.</span>
     </p>
 
     <div style="display:flex; gap:0.8rem; align-items:center; margin-bottom:.45rem; flex-wrap:wrap;">
@@ -174,7 +174,7 @@ canvas { width: 100%; display: block; border-radius: var(--radius); }
       </div>
 
       <div class="panel compare-panel scs-border">
-        <h3 data-i18n="scsTitle">SCS (boost géodésique)</h3>
+        <h3 data-i18n="scsTitle">SCS (boost radial sur le simplexe)</h3>
         <canvas id="m3-scs-canvas"></canvas>
         <div class="compare-note scs-note">
           <span id="scsNoteText">À 0% : image originale. Ensuite seulement, boost le long du rayon du simplexe à luminance Y constante.</span>
@@ -194,8 +194,8 @@ canvas { width: 100%; display: block; border-radius: var(--radius); }
 const I18N = {
   fr: {
     headerPrefix: "",
-    siteTitle: "Protection géodésique des teintes chair",
-    siteTagline: "Protection géodésique des teintes chair — 0% = original/original",
+    siteTitle: "Protection radiale des teintes chair",
+    siteTagline: "Protection radiale des teintes chair — 0% = original/original",
     title: "Protection des tons chair",
     desc: "Augmenter la saturation est courant en retouche photo. HSL traite tous les pixels de la même façon — les tons chair virent à l'orange. Le SCS ajuste chaque pixel le long de son rayon radial sur le simplexe γ-pondéré (de U vers la direction π du pixel), luminance Y linéaire préservée : les couleurs deviennent plus vives tout en gardant leur direction chromatique.",
     imageLabel: "Image :",
@@ -214,7 +214,7 @@ const I18N = {
   en: {
     headerPrefix: "",
     siteTitle: "Skin tone protection",
-    siteTagline: "Geodesic skin-tone protection — 0% = original/original",
+    siteTagline: "Radial simplex skin-tone protection — 0% = original/original",
     title: "Skin-tone protection",
     desc: "Increasing saturation is common in photo retouching. HSL treats all pixels the same way — skin tones drift toward orange. SCS moves each pixel along its radial ray on the γ-weighted simplex (from U toward the pixel's chromatic direction π) at constant linear Y: colors become more vivid while preserving their chromatic direction.",
     imageLabel: "Image:",

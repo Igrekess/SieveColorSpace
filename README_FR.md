@@ -24,7 +24,7 @@ Chaque affirmation du papier est reproductible depuis un script dans `scripts/`.
 # 1. Orientation des ellipses MacAdam — SCS gagne 18/25, RMS Δθ = 37,8°
 python3 scripts/macadam_test.py
 
-# 2. Différence de couleur SCS pure sur COMBVD — r ≈ 0,500 (zéro poids ajusté)
+# 2. Différence de couleur SCS pure sur COMBVD — r = 0,492 (single-feature, zéro poids ajusté)
 python3 scripts/delta_e_scs.py
 
 # 3. Hybride SCS + CIECAM02 sur COMBVD — r = 0,824 (6 poids ajustés)

@@ -24,7 +24,7 @@ Each claim in the paper is reproducible from a specific script in `scripts/`. A 
 # 1. MacAdam ellipse orientation — SCS wins 18/25, RMS Δθ = 37.8°
 python3 scripts/macadam_test.py
 
-# 2. Pure SCS color difference on COMBVD — r ≈ 0.500 (zero fitted weights)
+# 2. Pure SCS color difference on COMBVD — r = 0.492 (single-feature, zero fitted weights)
 python3 scripts/delta_e_scs.py
 
 # 3. SCS + CIECAM02 hybrid on COMBVD — r = 0.824 (6 fitted weights)

@@ -1,220 +1,92 @@
-# API Reference
+# API Reference — `scs` package
 
-## Color Space Conversions
+This document describes what the installable `scs` Python package actually ships (`scs/__init__.py`). For the richer companion computations (SCS+CIECAM02 fit, MacAdam validation, ΔE_SCS00 with Ridge, V4 reproduction), see `scripts/` — these are reproducibility scripts, not library API.
 
-### `scs.rgb_to_scs(rgb) -> (ell, S, pi)`
-
-Convert sRGB [0,1] to SCS coordinates.
-
-- **rgb**: array-like of 3 floats, sRGB values in [0, 1]
-- **Returns**: tuple (ell, S, pi)
-  - `ell`: luminance in [0.001, 0.999]
-  - `S`: saturation (D_KL from uniform) in bits, range [0, log2(3)]
-  - `pi`: numpy array (3,), simplex coordinates (pi_3, pi_5, pi_7)
-
-```python
-ell, S, pi = scs.rgb_to_scs([0.8, 0.3, 0.2])
-# ell=0.183, S=0.275, pi=[0.575, 0.330, 0.095]
-```
-
-### `scs.scs_to_rgb(ell, pi) -> rgb`
-
-Convert SCS coordinates back to sRGB [0,1].
-
-- **ell**: luminance
-- **pi**: simplex coordinates (3,)
-- **Returns**: numpy array (3,), sRGB values
-
-Round-trip is exact: `scs_to_rgb(*rgb_to_scs(x))` returns `x`.
-
-### `scs.image_to_scs(img) -> (pi, ell, S, hue)`
-
-Vectorized conversion: image (H,W,3) uint8 -> SCS coordinates.
-
-- **img**: numpy array (H,W,3) uint8, sRGB image
-- **Returns**: tuple
-  - `pi`: (H,W,3) simplex coordinates
-  - `ell`: (H,W) luminance
-  - `S`: (H,W) saturation in bits
-  - `hue`: (H,W) hue angle in degrees [0, 360)
-
-### `scs.scs_to_image(pi, ell) -> img`
-
-Vectorized inverse: SCS coordinates -> image (H,W,3) uint8.
+All information-theoretic quantities (`S`, `L`, `gft_check`) are in **nats** (natural log), matching the paper's convention. `S + L = log 3 ≈ 1.0986` exactly, for every π on the simplex.
 
 ---
 
-## Color Difference
+## Color space conversion
 
-### `scs.delta_e(xyz1, xyz2) -> float`
+### `scs.to_scs(xyz, Y_ref=1.0, matrix=None) -> SCSColor`
 
-SCS color difference between two CIE XYZ colors. Zero adjustable parameters.
+Convert CIE XYZ to SCS coordinates.
 
-Formula: `dE^2 = (3/4) * d_lum^2 + (1/4) * d_chrom^2`
+- **xyz**: array-like of 3 floats (CIE tristimulus values)
+- **Y_ref**: reference white luminance, defaults to 1.0
+- **matrix**: optional XYZ→LMS transform; defaults to HPE
+- **Returns**: `SCSColor(ell, S, hue, pi)` dataclass with
+  - `ell`: luminance ∈ [0, 1], clipped `xyz[1] / Y_ref`
+  - `S`: saturation = `D_KL(π ‖ uniform)` in nats, range `[0, log 3]`
+  - `hue`: SCS hue angle in degrees `[0, 360)`, formula
+    `atan2(√3·(π₅−π₇), 2π₃−π₅−π₇)` on the simplex
+  - `pi`: numpy array `(π₃, π₅, π₇)`, γ-weighted simplex coordinates
 
-- `d_lum`: Fisher distance on Bernoulli(ell), the p=2 channel
-- `d_chrom`: Bhattacharyya distance on the simplex with gamma_p weighting
-- Weights 3/4 and 1/4 derived from N/(N+1) with N=3 active primes
+```python
+from scs import to_scs
+c = to_scs([0.95, 1.0, 1.09])
+print(f"ℓ={c.ell:.3f}  S={c.S:.3f} nats  θ={c.hue:.1f}°")
+# ℓ=1.000  S=0.003 nats  θ=25.0°
+```
+
+---
+
+## Color difference
+
+### `scs.delta_e(xyz1, xyz2, Y_ref=1.0, matrix=None) -> float`
+
+SCS color difference between two CIE XYZ colors. Pure geodesic, zero fitted parameters.
+
+Formula:
+```
+ΔE² = (3/4) · d_lum²  +  (1/4) · d_chrom²
+```
+
+where
+- `d_lum = 2 |arcsin(√ℓ₁) − arcsin(√ℓ₂)|` is the Fisher–Bernoulli geodesic on the p=2 channel
+- `d_chrom = 2 · arccos(Σ √(π̃₁·π̃₂))` is the Bhattacharyya geodesic on the γ-weighted simplex
+- The weights 3/4 and 1/4 come from `N/(N+1)` with `N = 3` active primes (Theorem T7)
 
 ```python
 d = scs.delta_e([0.95, 1.0, 1.09], [0.60, 0.50, 0.30])
 ```
 
-### `scs.delta_e_lab(L1, a1, b1, L2, a2, b2) -> float`
+### `scs.delta_e_lab(L1, a1, b1, L2, a2, b2, white=(0.9505, 1.0, 1.089)) -> float`
 
-Same as delta_e but from CIELAB coordinates (convenience wrapper).
+Same as `delta_e` but from CIELAB coordinates (convenience wrapper).
 
----
+### `scs.fisher_luminance(Y1, Y2) -> float`
 
-## GFT-Conserving Adjustments
-
-All adjustments maintain the identity S + L = log2(3).
-
-### `scs.adjust_saturation(pi, delta_S) -> pi_new`
-
-Adjust saturation by `delta_S` bits while preserving hue direction.
-
-- Moves pi along a radial line toward/away from uniform (1/3, 1/3, 1/3)
-- Uses binary search (40 iterations) for exact target saturation
-- Hue is exactly preserved (same radial direction)
+Fisher–Bernoulli geodesic between two luminance values: `d_lum = 2 |arcsin(√Y₁) − arcsin(√Y₂)|`. Exposed as a standalone function because it is also used as a feature in the hybrid `ΔE_SCS00` metric (see `scripts/delta_e_scs00.py`).
 
 ```python
-pi_more_sat = scs.adjust_saturation(pi, +0.1)   # more saturated
-pi_less_sat = scs.adjust_saturation(pi, -0.05)   # less saturated
-```
-
-### `scs.adjust_luminance(ell, pi, delta_L) -> (ell_new, pi_new)`
-
-Adjust luminance while maintaining GFT balance.
-
-- The saturation is automatically compensated using the Fisher luminance
-  scaling factor: `f = sqrt(ell_new * (1-ell_new)) / sqrt(ell * (1-ell))`
-- This is the exact GFT-conserving correction — not a heuristic
-
-```python
-ell_new, pi_new = scs.adjust_luminance(0.5, pi, +0.1)  # brighter
+d_lum = scs.fisher_luminance(0.5, 0.45)   # → 0.1002
 ```
 
 ---
 
-## Geodesic Hue Rotation
+## Sum rule (S + L = log 3)
 
-### `scs.rotate_hue_geodesic(pi, angle_deg) -> pi_new`
+### `scs.saturation(pi) -> float`
 
-Rotate hue by `angle_deg` on the Fisher-Rao geodesic.
+`D_KL(π ‖ uniform)` in nats. Equivalent to the `S` field of `SCSColor`, exposed as a standalone function for batch processing.
 
-- Uses the square-root embedding: xi = sqrt(pi)
-- Rotation around the achromatic axis (1,1,1)/sqrt(3)
-- **Preserves saturation exactly** (great circle on S^2)
-- Works on single points (3,) or batches (N, 3)
+### `scs.luminance_entropy(pi) -> float`
 
-```python
-pi_rotated = scs.rotate_hue_geodesic(pi, 45)       # single point
-pi_batch = scs.rotate_hue_geodesic(pi_array, 30)   # (N, 3) batch
-```
-
----
-
-## Skin Tone Protection
-
-### `scs.skin_mask(pi, S=None) -> mask`
-
-Compute per-pixel skin tone mask from simplex coordinates.
-
-- Skin tones are centered at hue ~30 deg on the simplex with 35 deg half-width
-- Uses raised-cosine falloff: smooth transition, no hard boundary
-- Requires minimum saturation (S > 0.15 bits) to exclude achromatic pixels
-- No training data, no skin detection model, no calibration
-
-```python
-pi, ell, S, hue = scs.image_to_scs(img)
-mask = scs.skin_mask(pi, S)   # (H, W), values 0-1
-# Use: result = graded * (1-mask) + original * mask
-```
-
----
-
-## Color Grades
-
-### `scs.capture_grade(before, after, lut_size=17) -> grade`
-
-Capture a color grade from before/after images.
-
-- Measures the displacement field (delta_pi, delta_ell) on the simplex
-- Stores as a 3D LUT indexed by RGB of the before image
-- Empty cells filled by nearest-neighbor interpolation
-- The grade is **gamut-independent**: captured in any space, applicable in any space
-
-### `scs.apply_grade(img, grade, intensity=1.0) -> img`
-
-Apply a grade to an image.
-
-- Trilinear interpolation in the grade LUT
-- `intensity`: 0 = no effect, 1 = full, >1 = exaggerate, <0 = inverse
-
-### `scs.save_grade(grade, path)` / `scs.load_grade(path) -> grade`
-
-Save/load a grade as .scs file (JSON format).
-
-### `scs.blend_grades(grade_a, grade_b, ratio) -> grade`
-
-Blend two grades by linear interpolation on the simplex.
-
-- `ratio=0`: pure A, `ratio=1`: pure B, `ratio=0.5`: equal mix
-
----
-
-## GFT Conservation
+Shannon entropy `H(π)` in nats. Called "chromatic entropy" `L` in the paper.
 
 ### `scs.gft_check(pi) -> (S, L, total, error)`
 
-Verify the GFT identity: S + L = log2(3).
+Verify the sum rule `S + L = log 3`, the information-theoretic identity that holds on any three-outcome probability simplex with uniform reference.
 
-- `S`: saturation = D_KL(pi || uniform)
-- `L`: entropy = H(pi)
-- `total`: S + L (should be log2(3) = 1.58496...)
-- `error`: |total - log2(3)| (typically < 1e-15)
+- `S`: saturation in nats (`D_KL(π ‖ uniform)`)
+- `L`: chromatic entropy in nats (`H(π)`)
+- `total`: `S + L` — should equal `log 3 ≈ 1.0986`
+- `error`: `|total − log 3|`, typically `< 1e-15`
 
 ```python
 S, L, total, err = scs.gft_check([0.5, 0.3, 0.2])
-# total = 1.584963, err = 2.2e-16
-```
-
----
-
-## Colormaps
-
-### `scs.colormaps.scs_spectrum(n=256) -> array`
-
-Returns a (n, 3) float array of sRGB values.
-
-Available colormaps:
-
-| Name | Description | Best for |
-|------|-------------|----------|
-| `scs_spectrum` | Purple -> blue -> green -> yellow | General scientific |
-| `scs_turbo` | Blue -> cyan -> green -> yellow -> red | Temperature, velocity |
-| `scs_magma` | Black -> purple -> orange -> pale | Dark-to-bright intensity |
-| `scs_terrain` | Blue -> teal -> green -> brown -> white | Elevation, bathymetry |
-| `scs_vegetation` | Red -> orange -> yellow -> green -> dark green | NDVI, biomass, forest |
-| `scs_medical` | Dark blue-gray -> warm white | MRI, CT, X-ray |
-| `scs_thermal` | Blue -> red | Heat maps |
-| `scs_cool` | Blue -> green | Depth, ocean |
-| `scs_warm` | Green -> red | Activation, intensity |
-| `scs_full` | Blue -> green -> red | Full spectrum |
-| `scs_diverging` | Blue <- neutral -> red | Anomalies, T-stats |
-| `scs_seismic` | Strong blue <- white -> strong red | Seismic, gravity |
-
-### `scs.colormaps.register_matplotlib()`
-
-Register all SCS colormaps with matplotlib so they can be used by name:
-
-```python
-from scs.colormaps import register_matplotlib
-register_matplotlib()
-
-import matplotlib.pyplot as plt
-plt.imshow(data, cmap='scs_spectrum')
+# total = 1.098612, err ≈ 2.2e-16
 ```
 
 ---
@@ -223,7 +95,30 @@ plt.imshow(data, cmap='scs_spectrum')
 
 | Name | Value | Source |
 |------|-------|--------|
-| `scs.MU_STAR` | 15 | Fixed point of sieve (T7) |
-| `scs.GAMMAS` | (0.808, 0.696, 0.595) | Effective dimensions at mu*=15 |
-| `scs.PRIMES` | (3, 5, 7) | Active chromatic primes |
-| `scs.LOG2_3` | 1.58496... | Total informational budget |
+| `scs.MU_STAR` | 15 | Unique fixed point of the sieve dynamics (T7) |
+| `scs.GAMMAS` | `np.array([0.8076…, 0.6963…, 0.5955…])` | Anomalous dimensions at `μ* = 15` |
+| `scs.PRIMES` | `(3, 5, 7)` | Active chromatic primes |
+| `scs.__version__` | `"0.2.0"` | |
+
+The `GAMMAS` values are computed from the closed-form expression
+`γ_p = 4p·q^(p−1)·(1−δ)/(μ·(1−q^p)·(2−δ))` with `q = 1 − 2/μ*` and `δ = (1 − q^p)/p`, so they are not fit parameters.
+
+---
+
+## Companion scripts (reproducibility, not library API)
+
+For the larger computations that back the paper's headline numbers, see `scripts/` in the public repository. These are reproducibility artifacts, not part of the installable `scs` package, and they have their own dependencies (`scipy`, `pandas`, `scikit-learn`, `colour-science`; install via `pip install -e .[full]`).
+
+| Script | What it reproduces |
+|--------|---------------------|
+| `scripts/macadam_test.py` | MacAdam 18/25 ellipse orientation wins, RMS Δθ = 37.8° |
+| `scripts/delta_e_scs00.py` | ΔE_SCS00 on COMBVD: `r = 0.893 vs 0.878`, `p < 0.0001`, 5-fold CV |
+| `scripts/scs_cam02_hybrid.py` | SCS + CIECAM02 hybrid on COMBVD: `r = 0.824`, 6 weights |
+| `scripts/delta_e_scs.py` | Pure SCS combined metric (Fisher + Fubini–Study + bifurcation) used by `macadam_test.py` |
+| `scripts/v4_summary.py` | V4 channel weights from pre-computed CSV: `L−M ≈ 0.37` vs `γ₃/Σγ = 0.385` |
+| `scripts/v4_refined_analysis.py` | Full V4 fMRI pipeline (requires OpenNeuro ds005521 download) |
+| `scripts/v4_neural_extraction.py` | Extraction of `v4_bold_response.csv` from raw fMRI |
+| `scripts/v4_hybrid_model.py` | V4 opponent channels as CAM02 proxy on COMBVD |
+| `scripts/scs_companion.py` | Self-test (`--verify`) + paper figures (`--all`) |
+
+All listed scripts use the same canonical SCS pipeline as `scs/__init__.py` (sRGB → XYZ → LMS/HPE → γ-weighted simplex), in nats for S and L.

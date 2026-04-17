@@ -196,7 +196,7 @@ details.theory-panel summary::-webkit-details-marker{display:none}
     </div>
     <div class="panel scs">
       <h3 data-i18n="lawTitle">Exact law</h3>
-      <div class="formula">S(π) = D<sub>KL</sub>(π || u), &nbsp; L(π) = H(π), &nbsp; u = (1/3, 1/3, 1/3), &nbsp; S + L = log₂3</div>
+      <div class="formula">S(π) = D<sub>KL</sub>(π || u), &nbsp; L(π) = H(π), &nbsp; u = (1/3, 1/3, 1/3), &nbsp; S + L = log 3</div>
       <div class="note" data-i18n="lawNote">The scene part is a qualitative proxy. The two local readouts are the exact simplex quantities.</div>
     </div>
   </div>
@@ -207,8 +207,8 @@ details.theory-panel summary::-webkit-details-marker{display:none}
       <p><strong>SCS separates two different things.</strong></p>
       <p><code>ℓ ∈ [0,1]</code> is the luminance term: it measures brightness relative to white.</p>
       <p><code>π = (π₃, π₅, π₇) ∈ Δ²</code> is the chromatic structure: a probability distribution on the three active channels.</p>
-      <p>On the simplex, saturation is <code>S(π)=D<sub>KL</sub>(π||u)</code> and chromatic entropy is <code>L(π)=H(π)</code>. These obey the exact conservation law <code>S+L=log₂3</code>.</p>
-      <p>In this module, the sunset scene is not the proof of the law. It is the visual intuition. The two local samples — sky and sun — are what connect the scene back to the exact SCS quantities.</p>
+      <p>On the simplex, saturation is <code>S(π)=D<sub>KL</sub>(π||u)</code> and chromatic entropy is <code>L(π)=H(π)</code>. These obey an information-theoretic sum rule: <code>S+L=log 3</code>. The identity is generic for any probability distribution on three outcomes; what is color-specific here is the choice of three active channels and the physical reading of <code>S</code> and <code>L</code>.</p>
+      <p>In this module, the sunset scene is not the proof of the sum rule. It is the visual intuition. The two local samples — sky and sun — are what connect the scene back to the exact SCS quantities.</p>
     </div>
   </details>
 </section>
@@ -244,8 +244,8 @@ const I18N = {
     theoryText:`<p><strong>Le SCS sépare deux choses différentes.</strong></p>
       <p><code>ℓ ∈ [0,1]</code> est le terme de luminance : il mesure la clarté relativement au blanc.</p>
       <p><code>π = (π₃, π₅, π₇) ∈ Δ²</code> est la structure chromatique : une distribution de probabilité sur les trois canaux actifs.</p>
-      <p>Sur le simplexe, la saturation est <code>S(π)=D<sub>KL</sub>(π||u)</code> et l’entropie chromatique est <code>L(π)=H(π)</code>. Ces deux quantités obéissent à la loi exacte <code>S+L=log₂3</code>.</p>
-      <p>Dans ce module, la scène de coucher de soleil n’est pas la preuve de la loi. C’est l’intuition visuelle. Les deux échantillons locaux — ciel et soleil — sont ce qui reconnecte la scène aux quantités exactes du SCS.</p>`
+      <p>Sur le simplexe, la saturation est <code>S(π)=D<sub>KL</sub>(π||u)</code> et l’entropie chromatique est <code>L(π)=H(π)</code>. Ces deux quantités obéissent à une règle de somme informationnelle : <code>S+L=log 3</code>. L’identité est générique pour toute distribution de probabilité sur trois issues ; ce qui est spécifique à la couleur ici, c’est le choix des trois canaux actifs et la lecture physique de <code>S</code> et <code>L</code>.</p>
+      <p>Dans ce module, la scène de coucher de soleil n’est pas la preuve de la règle. C’est l’intuition visuelle. Les deux échantillons locaux — ciel et soleil — sont ce qui reconnecte la scène aux quantités exactes du SCS.</p>`
   },
   en: {
     headerTitle:"Module 02 - Sunset, Local Structure, and Color Budget",
@@ -275,20 +275,20 @@ const I18N = {
     theoryText:`<p><strong>SCS separates two different things.</strong></p>
       <p><code>ℓ ∈ [0,1]</code> is the luminance term: it measures brightness relative to white.</p>
       <p><code>π = (π₃, π₅, π₇) ∈ Δ²</code> is the chromatic structure: a probability distribution on the three active channels.</p>
-      <p>On the simplex, saturation is <code>S(π)=D<sub>KL</sub>(π||u)</code> and chromatic entropy is <code>L(π)=H(π)</code>. These obey the exact conservation law <code>S+L=log₂3</code>.</p>
-      <p>In this module, the sunset scene is not the proof of the law. It is the visual intuition. The two local samples — sky and sun — are what connect the scene back to the exact SCS quantities.</p>`
+      <p>On the simplex, saturation is <code>S(π)=D<sub>KL</sub>(π||u)</code> and chromatic entropy is <code>L(π)=H(π)</code>. These obey an information-theoretic sum rule: <code>S+L=log 3</code>. The identity is generic for any probability distribution on three outcomes; what is color-specific here is the choice of three active channels and the physical reading of <code>S</code> and <code>L</code>.</p>
+      <p>In this module, the sunset scene is not the proof of the sum rule. It is the visual intuition. The two local samples — sky and sun — are what connect the scene back to the exact SCS quantities.</p>`
   }
 };
 
 function detectLang(){
-  const s = localStorage.getItem('module01_connected_lang');
+  const s = localStorage.getItem('module02_lang');
   if(s==='fr'||s==='en') return s;
   return (navigator.language||'').toLowerCase().startsWith('fr') ? 'fr' : 'en';
 }
 let currentLang = detectLang();
 function applyLanguage(lang){
   currentLang = lang;
-  localStorage.setItem('module01_connected_lang', lang);
+  localStorage.setItem('module02_lang', lang);
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
@@ -345,7 +345,7 @@ function hslToRgb(h,s,l){
 }
 const YCOEF = [0.2126,0.7152,0.0722];
 const U = [1/3,1/3,1/3];
-const LOG2_3 = Math.log2(3);
+const LOG_3 = Math.log(3);  // natural log, in nats — matches PT_COLOR.tex sum-rule convention
 
 function normalize(v){
   const s = v.reduce((a,b)=>a+b,0);
@@ -355,10 +355,10 @@ function luminanceLinear(rgbLin){
   return YCOEF[0]*rgbLin[0] + YCOEF[1]*rgbLin[1] + YCOEF[2]*rgbLin[2];
 }
 function entropy(p){
-  return -p.reduce((a,v)=>a+(v>1e-12 ? v*Math.log2(v) : 0),0);
+  return -p.reduce((a,v)=>a+(v>1e-12 ? v*Math.log(v) : 0),0);
 }
 function kl(p,q){
-  return p.reduce((a,v,i)=>a+(v>1e-12 ? v*Math.log2(v/q[i]) : 0),0);
+  return p.reduce((a,v,i)=>a+(v>1e-12 ? v*Math.log(v/q[i]) : 0),0);
 }
 function hueAngle(rgbSrgb){
   const [h] = rgbToHsl(rgbSrgb[0], rgbSrgb[1], rgbSrgb[2]);
@@ -487,8 +487,8 @@ function updateBudgetCard(kind, pi, ell){
     'SCS(' + (ell*100).toFixed(1) + '% ; ' +
     (pi[0]*100).toFixed(1) + '%, ' + (pi[1]*100).toFixed(1) + '%, ' + (pi[2]*100).toFixed(1) +
     '%)   |   S=' + S.toFixed(3) + '   L=' + L.toFixed(3) + '   S+L=' + (S+L).toFixed(3);
-  document.getElementById(prefix+'FillS').style.width = (S/LOG2_3*100).toFixed(1)+'%';
-  document.getElementById(prefix+'FillL').style.width = (L/LOG2_3*100).toFixed(1)+'%';
+  document.getElementById(prefix+'FillS').style.width = (S/LOG_3*100).toFixed(1)+'%';
+  document.getElementById(prefix+'FillL').style.width = (L/LOG_3*100).toFixed(1)+'%';
   document.getElementById(prefix+'ValS').textContent = S.toFixed(3);
   document.getElementById(prefix+'ValL').textContent = L.toFixed(3);
   document.getElementById(prefix+'ValSL').textContent = (S+L).toFixed(3);

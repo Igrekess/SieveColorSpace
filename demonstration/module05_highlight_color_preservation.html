@@ -138,6 +138,79 @@ canvas{display:block;width:100%;height:auto;border-radius:10px}
 </main>
 
 <script>
+// This module uses the real SCS pipeline: sRGB → XYZ → LMS (HPE) → γ-weighted simplex.
+// The SCS branch preserves the chromatic direction π and reduces only linear luminance Y,
+// visually contrasting with the classical HSL-based compression that desaturates toward white.
+// See module03 for the same pipeline and PT_COLOR.tex §Coordinates.
+const MU_STAR = 15;
+const Q_REL = 1 - 2 / MU_STAR;
+const PRIMES = [3, 5, 7];
+function delta_p(p, q = Q_REL) { return (1 - Math.pow(q, p)) / p; }
+function gamma_p(p, mu = MU_STAR) {
+  const q = 1 - 2 / mu, d = delta_p(p, q);
+  return 4 * p * Math.pow(q, p - 1) * (1 - d) / (mu * (1 - Math.pow(q, p)) * (2 - d));
+}
+const GAMMAS = PRIMES.map(p => gamma_p(p));
+
+const M_SRGB_XYZ = [
+  [0.4124564, 0.3575761, 0.1804375],
+  [0.2126729, 0.7151522, 0.0721750],
+  [0.0193339, 0.1191920, 0.9503041]
+];
+const M_XYZ_SRGB = [
+  [ 3.2404542, -1.5371385, -0.4985314],
+  [-0.9692660,  1.8760108,  0.0415560],
+  [ 0.0556434, -0.2040259,  1.0572252]
+];
+const M_HPE = [
+  [ 0.38971, 0.68898, -0.07868],
+  [-0.22981, 1.18340,  0.04641],
+  [ 0.00000, 0.00000,  1.00000]
+];
+const M_HPE_INV = [
+  [ 1.91025, -1.11218, 0.20195],
+  [ 0.37097,  0.62911, 0.00000],
+  [ 0.00000,  0.00000, 1.00000]
+];
+function mv3(m, v) {
+  return [
+    m[0][0]*v[0] + m[0][1]*v[1] + m[0][2]*v[2],
+    m[1][0]*v[0] + m[1][1]*v[1] + m[1][2]*v[2],
+    m[2][0]*v[0] + m[2][1]*v[1] + m[2][2]*v[2]
+  ];
+}
+function rgbToXyz(rgb) {
+  // rgb: sRGB in [0,1]
+  const lin = [srgbToLinear(rgb[0]), srgbToLinear(rgb[1]), srgbToLinear(rgb[2])];
+  return mv3(M_SRGB_XYZ, lin);
+}
+function xyzToRgb(xyz) {
+  const lin = mv3(M_XYZ_SRGB, xyz);
+  return [linearToSrgb(lin[0]), linearToSrgb(lin[1]), linearToSrgb(lin[2])];
+}
+function xyzToLms(xyz) {
+  return mv3(M_HPE, xyz).map(v => Math.max(v, 1e-12));
+}
+function lmsToXyz(lms) {
+  return mv3(M_HPE_INV, lms);
+}
+function lmsToSimplex(lms) {
+  const w = GAMMAS.map((g, i) => g * Math.max(lms[i], 1e-12));
+  const s = w[0] + w[1] + w[2];
+  return w.map(v => v / s);
+}
+// Reconstruct sRGB from a γ-weighted simplex direction π and a target linear Y.
+// π is preserved exactly (same chromatic direction); only linear luminance Y is rescaled.
+function piToRgbExact(pi, targetY) {
+  const lmsR = [pi[0] / GAMMAS[0], pi[1] / GAMMAS[1], pi[2] / GAMMAS[2]];
+  const s = lmsR[0] + lmsR[1] + lmsR[2];
+  const lmsN = lmsR.map(v => v / s);
+  const xyzN = lmsToXyz(lmsN);
+  if (Math.abs(xyzN[1]) < 1e-12) return [0.5, 0.5, 0.5];
+  const scale = targetY / xyzN[1];
+  return xyzToRgb(xyzN.map(v => v * scale));
+}
+
 const I18N = {
   fr: {
     headerTitle:"Module 05 - Protection chromatique des hautes lumières",
@@ -153,7 +226,7 @@ const I18N = {
     classicalTitle:"Classical",
     scsTitle:"SCS",
     classicalNote:"Les hautes lumières se compressent, mais leur couleur blanchit plus vite.",
-    scsNote:"Les hautes lumières sont comprimées en essayant de préserver leur identité chromatique.",
+    scsNote:"La branche SCS préserve la direction chromatique π sur le simplexe et ne réduit que la luminance linéaire Y ; la branche classique désature vers le blanc.",
     original:"Original",
     theory:"En photographie, une haute lumière n’est pas seulement une zone plus claire : elle possède souvent aussi une teinte. Dans un ciel de coucher de soleil, un reflet de peau ou une lumière de néon, cette identité chromatique fait partie du rendu.<br><br>Une correction classique des hautes lumières agit surtout sur la luminosité, ce qui tend à décolorer les zones les plus brillantes. La version SCS cherche au contraire à réduire l’excès de lumière tout en préservant la direction chromatique locale.<br><br>Le but n’est donc pas seulement de récupérer du détail, mais de conserver la couleur propre des régions lumineuses."
   },
@@ -171,7 +244,7 @@ const I18N = {
     classicalTitle:"Classical",
     scsTitle:"SCS",
     classicalNote:"Highlights are compressed, but their color washes out faster.",
-    scsNote:"Highlights are compressed while trying to preserve their chromatic identity.",
+    scsNote:"The SCS branch preserves the chromatic direction π on the simplex and only reduces the linear luminance Y; the classical branch desaturates toward white.",
     original:"Original",
     theory:"In photography, a highlight is not only a brighter region: it often also has a hue. In a sunset sky, a skin reflection, or a neon light, that chromatic identity is part of the image.<br><br>A classical highlight correction mainly acts on brightness, which tends to decolorize the brightest areas. The SCS version instead tries to reduce excess light while preserving the local chromatic direction.<br><br>The goal is therefore not only to recover detail, but to keep the proper color of bright regions."
   }
@@ -343,33 +416,49 @@ function render(amount){
   for(let i=0;i<origPixels.length;i+=4){
     const r = origPixels[i]/255, g = origPixels[i+1]/255, b = origPixels[i+2]/255, a = origPixels[i+3];
     const [h,s,l] = rgbToHsl(r,g,b);
-    const Y = luminance([r,g,b]);
+
+    // Linear-light values, linear luminance Y, and γ-weighted simplex π (real SCS pipeline).
+    const rLin = srgbToLinear(r), gLin = srgbToLinear(g), bLin = srgbToLinear(b);
+    const Y = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
+    const xyz = mv3(M_SRGB_XYZ, [rLin, gLin, bLin]);
+    const lms = xyzToLms(xyz);
+    const pi = lmsToSimplex(lms);
 
     const highMask = smoothstep((Y - 0.55) / 0.35);
+
+    // Optional skin protection: use the simplex-based criterion (π₃ > 0.37 and π₇ < 0.28)
+    // when the checkbox is on, smoothly blended so it doesn't flicker at the boundaries.
     let skinMask = 0;
     if (protectSkin) {
-      let dHue = Math.abs(h - 28);
-      if (dHue > 180) dHue = 360 - dHue;
-      skinMask = clamp01(1 - Math.max(0, dHue - 18) / 22) * clamp01((s - 0.08) / 0.22);
+      const mPi3 = smoothstep((pi[0] - 0.37) / 0.06);
+      const mPi7 = smoothstep((0.28 - pi[2]) / 0.06);
+      skinMask = mPi3 * mPi7;
     }
 
-    // Classical: compress highlights mainly through luminance/lightness and desaturate slightly
+    // Classical branch: pure HSL highlight compression — reduces lightness AND saturation,
+    // so highlights shift toward white / desaturate as they darken.
     const cLight = l * (1 - 0.30 * amount * highMask);
-    const cSat = s * (1 - 0.35 * amount * highMask);
+    const cSat   = s * (1 - 0.35 * amount * highMask);
     const cRgb = hslToRgb(h, clamp01(cSat), clamp01(cLight));
 
-    // SCS-inspired: reduce highlight luminance but preserve hue/saturation more, with optional skin damping
-    const scsProtect = 1 - 0.75 * skinMask;
-    const sLight = l * (1 - 0.26 * amount * highMask * scsProtect);
-    const sSat = s * (1 - 0.08 * amount * highMask * scsProtect);
-    const sRgb = hslToRgb(h, clamp01(sSat), clamp01(sLight));
+    // SCS branch: preserve the chromatic direction π on the γ-weighted simplex and reduce only
+    // the linear luminance Y. The hue/saturation relation is preserved exactly: the highlight
+    // gets darker but keeps its chromatic identity (no desaturation toward white).
+    const compressAmount = amount * highMask * (1 - 0.75 * skinMask);
+    let sRgb;
+    if (compressAmount <= 0 || Y <= 1e-6) {
+      sRgb = [r, g, b];
+    } else {
+      const Y_new = Math.max(Y * (1 - 0.28 * compressAmount), 1e-6);
+      sRgb = piToRgbExact(pi, Y_new);  // returns sRGB in [0,1]
+    }
 
-    cd[i] = Math.round(clamp01(cRgb[0])*255);
+    cd[i]   = Math.round(clamp01(cRgb[0])*255);
     cd[i+1] = Math.round(clamp01(cRgb[1])*255);
     cd[i+2] = Math.round(clamp01(cRgb[2])*255);
     cd[i+3] = a;
 
-    sd[i] = Math.round(clamp01(sRgb[0])*255);
+    sd[i]   = Math.round(clamp01(sRgb[0])*255);
     sd[i+1] = Math.round(clamp01(sRgb[1])*255);
     sd[i+2] = Math.round(clamp01(sRgb[2])*255);
     sd[i+3] = a;

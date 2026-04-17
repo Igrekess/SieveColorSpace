@@ -180,6 +180,9 @@ details.theory-panel summary::-webkit-details-marker{display:none}
 </main>
 
 <script>
+// This module uses the real SCS pipeline: sRGB → XYZ → LMS (HPE) → γ-weighted simplex.
+// Equilibrium acts on α (radial distance from uniform on the simplex) and the target luminance,
+// not on HSL saturation/lightness. See module03 for the same pipeline and PT_COLOR.tex §Coordinates.
 const I18N = {
   fr: {
     headerTitle:"Module 04 - Equilibrium",
@@ -305,6 +308,97 @@ function hslToRgb(h,s,l){
   return [hue2rgb(p,q,h+1/3), hue2rgb(p,q,h), hue2rgb(p,q,h-1/3)];
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SCS pipeline (canonical, shared with module03_skin_tone_protection.html)
+// sRGB → linear → XYZ → LMS (HPE) → γ-weighted simplex π = (π₃, π₅, π₇)
+// ─────────────────────────────────────────────────────────────────────────────
+const MU_STAR = 15;
+const Q_REL = 1 - 2 / MU_STAR;
+const PRIMES = [3, 5, 7];
+function delta_p(p, q = Q_REL) { return (1 - Math.pow(q, p)) / p; }
+function gamma_p(p, mu = MU_STAR) {
+  const q = 1 - 2 / mu, d = delta_p(p, q);
+  return 4 * p * Math.pow(q, p - 1) * (1 - d) / (mu * (1 - Math.pow(q, p)) * (2 - d));
+}
+const GAMMAS = PRIMES.map(p => gamma_p(p));
+const UNIFORM = [1/3, 1/3, 1/3];
+
+const M_SRGB_XYZ = [
+  [0.4124564, 0.3575761, 0.1804375],
+  [0.2126729, 0.7151522, 0.0721750],
+  [0.0193339, 0.1191920, 0.9503041]
+];
+const M_XYZ_SRGB = [
+  [ 3.2404542, -1.5371385, -0.4985314],
+  [-0.9692660,  1.8760108,  0.0415560],
+  [ 0.0556434, -0.2040259,  1.0572252]
+];
+const M_HPE = [
+  [ 0.38971, 0.68898, -0.07868],
+  [-0.22981, 1.18340,  0.04641],
+  [ 0.00000, 0.00000,  1.00000]
+];
+const M_HPE_INV = [
+  [ 1.91025, -1.11218, 0.20195],
+  [ 0.37097,  0.62911, 0.00000],
+  [ 0.00000,  0.00000, 1.00000]
+];
+function mv3(m, v) {
+  return [
+    m[0][0]*v[0] + m[0][1]*v[1] + m[0][2]*v[2],
+    m[1][0]*v[0] + m[1][1]*v[1] + m[1][2]*v[2],
+    m[2][0]*v[0] + m[2][1]*v[1] + m[2][2]*v[2]
+  ];
+}
+function rgbToXyz(rgb){
+  const lin = rgb.map(srgbToLinear);
+  return mv3(M_SRGB_XYZ, lin);
+}
+function xyzToRgb(xyz){
+  const lin = mv3(M_XYZ_SRGB, xyz);
+  return lin.map(linearToSrgb);
+}
+function xyzToLms(xyz){
+  return mv3(M_HPE, xyz).map(v => Math.max(v, 1e-12));
+}
+function lmsToXyz(lms){
+  return mv3(M_HPE_INV, lms);
+}
+function lmsToSimplex(lms){
+  const w = GAMMAS.map((g, i) => g * Math.max(lms[i], 1e-12));
+  const s = w[0] + w[1] + w[2];
+  return w.map(v => v / s);
+}
+// Reconstruct sRGB from a simplex point π and a target linear luminance Y.
+function piToRgbExact(pi, targetY){
+  // Recover unnormalized LMS from π by dividing out γ weights (normalized direction).
+  const lmsR = [pi[0]/GAMMAS[0], pi[1]/GAMMAS[1], pi[2]/GAMMAS[2]];
+  const s = lmsR[0] + lmsR[1] + lmsR[2];
+  if (s < 1e-12) return [0.5, 0.5, 0.5];
+  const lmsN = lmsR.map(v => v / s);
+  const xyzN = lmsToXyz(lmsN);
+  if (Math.abs(xyzN[1]) < 1e-12) return [0.5, 0.5, 0.5];
+  const scale = targetY / xyzN[1];
+  return xyzToRgb(xyzN.map(v => v * scale));
+}
+// Radial (α) coordinate: 0 = uniform gray point (1/3,1/3,1/3), 1 = simplex boundary
+// along the direction (π − U). α > 1 would mean the point is outside the simplex.
+function piToAlpha(pi){
+  // For direction v = π − U, the boundary along that ray is reached when
+  // π_i = U_i + t·v_i hits 0 for some i. t_max = min_i U_i / max(0, -v_i).
+  // α = 1 / t_max (so α = 0 at U, α = 1 at boundary).
+  let tMax = Infinity;
+  for (let i = 0; i < 3; i++){
+    const v = pi[i] - UNIFORM[i];
+    if (v < -1e-12){
+      const t = UNIFORM[i] / (-v);
+      if (t < tMax) tMax = t;
+    }
+  }
+  if (!isFinite(tMax) || tMax <= 0) return 0;
+  return 1 / tMax;
+}
+
 const imageCanvas = document.getElementById('imageCanvas');
 const graphCanvas = document.getElementById('graphCanvas');
 const ictx = imageCanvas.getContext('2d');
@@ -396,9 +490,13 @@ function analyzeOriginal(){
     const r = d[i]/255, g = d[i+1]/255, b = d[i+2]/255;
     const linR = srgbToLinear(r), linG = srgbToLinear(g), linB = srgbToLinear(b);
     const Y = 0.2126*linR + 0.7152*linG + 0.0722*linB;
-    const hsl = rgbToHsl(r,g,b);
+    // SCS saturation: α = radial distance from the uniform simplex point.
+    const xyz = rgbToXyz([r, g, b]);
+    const lms = xyzToLms(xyz);
+    const pi  = lmsToSimplex(lms);
+    const alpha = Math.min(1, piToAlpha(pi));
     sumLum += Y;
-    sumSat += hsl[1];
+    sumSat += alpha;
     n++;
   }
   workingStats = {
@@ -437,64 +535,118 @@ function renderEquilibrium(){
   const out = ictx.createImageData(originalImageData.width, originalImageData.height);
   const od = out.data;
 
-  // global target movement
-  const lumFactor = eq >= 0 ? (1 - 0.18*eq) : (1 - 0.35*eq);
-  const satFactor = eq >= 0 ? (1 + 0.55*eq) : (1 + 0.30*eq);
+  // Keep α strictly inside the simplex to avoid gamut blowouts.
+  const ALPHA_MAX = 0.985;
 
   let sumLum = 0, sumSat = 0, n = 0;
 
   for(let i=0;i<d.length;i+=4){
     const r = d[i]/255, g = d[i+1]/255, b = d[i+2]/255;
     const a = d[i+3];
-    const hsl = rgbToHsl(r,g,b);
-    const hueDeg = hsl[0] * 360;
-    const sat = hsl[1];
-    const lig = hsl[2];
 
-    // soft protection masks
+    // ───── SCS pipeline ─────
+    const linR = srgbToLinear(r), linG = srgbToLinear(g), linB = srgbToLinear(b);
+    const Y0 = 0.2126*linR + 0.7152*linG + 0.0722*linB;
+
+    const xyz0 = mv3(M_SRGB_XYZ, [linR, linG, linB]);
+    const lms0 = xyzToLms(xyz0);
+    const pi0  = lmsToSimplex(lms0);
+    const alpha0 = piToAlpha(pi0);
+
+    // ───── Protection mask (pragmatic: HSL for skin detection only) ─────
+    const hsl = rgbToHsl(r, g, b);
+    const hueDeg = hsl[0] * 360;
+    const lig = hsl[2];
+    const hslSat = hsl[1];
+
     let protect = 0;
 
     if (useSkin) {
-      // warm skin corridor
+      // warm skin corridor (HSL trigger) — dominated by π₃/π₇ region on SCS.
       let dHue = Math.abs(hueDeg - 28);
       if (dHue > 180) dHue = 360 - dHue;
       const skinHue = clamp01(1 - Math.max(0, dHue - 18) / 22);
-      const skinSat = clamp01((sat - 0.08) / 0.22);
-      protect = Math.max(protect, skinHue * skinSat);
+      const skinSat = clamp01((hslSat - 0.08) / 0.22);
+      let m = skinHue * skinSat;
+      // SCS-side reinforcement: warm-reddish, low-blue region (π₃ high, π₇ low).
+      const scsSkin = clamp01((pi0[0] - 0.36) / 0.12) * clamp01((0.30 - pi0[2]) / 0.12);
+      m = Math.max(m, scsSkin);
+      protect = Math.max(protect, m);
     }
 
     if (useHighlights) {
-      const p = clamp01((lig - 0.68) / 0.22);
+      // highlights: high linear luminance.
+      const p = clamp01((Y0 - 0.55) / 0.30);
       protect = Math.max(protect, p);
     }
 
     if (useShadows) {
-      const p = clamp01((0.22 - lig) / 0.18);
+      const p = clamp01((0.15 - Y0) / 0.12);
       protect = Math.max(protect, p * 0.85);
     }
 
     if (useNeutrals) {
-      const p = clamp01((0.18 - sat) / 0.18);
+      // near-neutral on the simplex: small α.
+      const p = clamp01((0.12 - alpha0) / 0.12);
       protect = Math.max(protect, p);
     }
 
-    // protected local factors
-    const localLumFactor = 1 + (lumFactor - 1) * (1 - 0.85*protect);
-    const localSatFactor = 1 + (satFactor - 1) * (1 - 0.90*protect);
+    // ───── Equilibrium move (local, protection-modulated) ─────
+    // satFactor > 1 when eq > 0 (push π toward the simplex boundary) with a mild
+    // luminance decrease; satFactor < 1 when eq < 0 (push π toward uniform) with
+    // a mild luminance increase. These are the two ends of the SCS equilibrium axis.
+    const rawSatFactor = 1 + (eq >= 0 ? 0.70*eq : 0.40*eq);
+    const rawLumFactor = eq >= 0 ? (1 - 0.18*eq) : (1 + 0.25*(-eq));
+    const satFactor = 1 + (rawSatFactor - 1) * (1 - 0.85*protect);
+    const lumFactor = 1 + (rawLumFactor - 1) * (1 - 0.80*protect);
 
-    const newS = clamp01(sat * localSatFactor);
-    const newL = clamp01(lig * localLumFactor);
-    const rgb = hslToRgb(hsl[0], newS, newL);
+    // New α: scale then clamp inside the simplex.
+    let newAlpha = alpha0 * satFactor;
+    if (newAlpha < 0) newAlpha = 0;
+    if (newAlpha > ALPHA_MAX) newAlpha = ALPHA_MAX;
 
-    od[i] = Math.round(rgb[0]*255);
+    // Rebuild π' = U + (newAlpha / alpha0) * (π − U). If alpha0 ~ 0 keep uniform.
+    let piNew;
+    if (alpha0 < 1e-9) {
+      piNew = pi0.slice();
+    } else {
+      const k = newAlpha / alpha0;
+      piNew = [
+        UNIFORM[0] + k * (pi0[0] - UNIFORM[0]),
+        UNIFORM[1] + k * (pi0[1] - UNIFORM[1]),
+        UNIFORM[2] + k * (pi0[2] - UNIFORM[2])
+      ];
+      // Renormalize (numerical safety) and clamp strictly positive.
+      const s = piNew[0] + piNew[1] + piNew[2];
+      piNew = piNew.map(v => Math.max(v, 1e-9) / s);
+    }
+
+    // New target luminance. Also cap so we don't overshoot the display range.
+    let newY = Y0 * lumFactor;
+    if (newY < 0) newY = 0;
+    if (newY > 1) newY = 1;
+
+    // Back to sRGB via the exact π → RGB reconstruction at target Y.
+    let rgb = piToRgbExact(piNew, newY);
+
+    // Gamut clipping: if the reconstruction falls outside [0,1], scale the
+    // luminance down until it fits, preserving chromaticity (π stays the same).
+    let maxC = Math.max(rgb[0], rgb[1], rgb[2]);
+    if (maxC > 1) {
+      const yScale = 1 / maxC;
+      rgb = piToRgbExact(piNew, newY * yScale);
+    }
+    rgb = rgb.map(clamp01);
+
+    od[i]   = Math.round(rgb[0]*255);
     od[i+1] = Math.round(rgb[1]*255);
     od[i+2] = Math.round(rgb[2]*255);
     od[i+3] = a;
 
-    const linR = srgbToLinear(rgb[0]), linG = srgbToLinear(rgb[1]), linB = srgbToLinear(rgb[2]);
-    const Y = 0.2126*linR + 0.7152*linG + 0.0722*linB;
-    sumLum += Y;
-    sumSat += newS;
+    const lR = srgbToLinear(rgb[0]), lG = srgbToLinear(rgb[1]), lB = srgbToLinear(rgb[2]);
+    const Yout = 0.2126*lR + 0.7152*lG + 0.0722*lB;
+    sumLum += Yout;
+    sumSat += newAlpha;
     n++;
   }
 
@@ -519,8 +671,8 @@ function renderEquilibrium(){
 
   document.getElementById('statusFormula').textContent =
     'Equilibrium = ' + (eq>0?'+':'') + eq.toFixed(2) +
-    '   |   L̄: ' + workingStats.meanLum.toFixed(3) + ' → ' + target.meanLum.toFixed(3) +
-    '   |   S̄: ' + workingStats.meanSat.toFixed(3) + ' → ' + target.meanSat.toFixed(3) +
+    '   |   Ȳ: ' + workingStats.meanLum.toFixed(3) + ' → ' + target.meanLum.toFixed(3) +
+    '   |   ᾱ: ' + workingStats.meanSat.toFixed(3) + ' → ' + target.meanSat.toFixed(3) +
     '   |   Protect: ' + (active || 'none');
 
   drawGraph(target);

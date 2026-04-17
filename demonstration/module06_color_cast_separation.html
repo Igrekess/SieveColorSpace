@@ -145,6 +145,89 @@ canvas{display:block;width:100%;height:auto;border-radius:10px}
 </main>
 
 <script>
+// This module uses the real SCS pipeline: sRGB -> XYZ -> LMS (HPE) -> gamma-weighted simplex.
+// The SCS cast-correction moves each pixel's pi toward the uniform U on the 2-simplex
+// while preserving linear luminance Y; the classical branch uses plain RGB subtraction.
+// See module03 for the same pipeline and PT_COLOR.tex §Coordinates.
+
+const MU_STAR = 15;
+const Q_REL = 1 - 2 / MU_STAR;
+const PRIMES = [3, 5, 7];
+function delta_p(p, q = Q_REL) { return (1 - Math.pow(q, p)) / p; }
+function gamma_p(p, mu = MU_STAR) {
+  const q = 1 - 2 / mu, d = delta_p(p, q);
+  return 4 * p * Math.pow(q, p - 1) * (1 - d) / (mu * (1 - Math.pow(q, p)) * (2 - d));
+}
+const GAMMAS = PRIMES.map(p => gamma_p(p));
+
+const M_SRGB_XYZ = [
+  [0.4124564, 0.3575761, 0.1804375],
+  [0.2126729, 0.7151522, 0.0721750],
+  [0.0193339, 0.1191920, 0.9503041]
+];
+const M_XYZ_SRGB = [
+  [ 3.2404542, -1.5371385, -0.4985314],
+  [-0.9692660,  1.8760108,  0.0415560],
+  [ 0.0556434, -0.2040259,  1.0572252]
+];
+const M_HPE = [
+  [ 0.38971, 0.68898, -0.07868],
+  [-0.22981, 1.18340,  0.04641],
+  [ 0.00000, 0.00000,  1.00000]
+];
+const M_HPE_INV = [
+  [ 1.91025, -1.11218, 0.20195],
+  [ 0.37097,  0.62911, 0.00000],
+  [ 0.00000,  0.00000, 1.00000]
+];
+
+function mv3(m, v) {
+  return [
+    m[0][0]*v[0] + m[0][1]*v[1] + m[0][2]*v[2],
+    m[1][0]*v[0] + m[1][1]*v[1] + m[1][2]*v[2],
+    m[2][0]*v[0] + m[2][1]*v[1] + m[2][2]*v[2]
+  ];
+}
+function srgbToLinear(c) {
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+function linearToSrgb(c) {
+  c = Math.max(0, Math.min(1, c));
+  return c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+}
+function rgbToXyz(rgb) {
+  const lin = rgb.map(srgbToLinear);
+  return mv3(M_SRGB_XYZ, lin);
+}
+function xyzToRgb(xyz) {
+  const lin = mv3(M_XYZ_SRGB, xyz);
+  return lin.map(linearToSrgb);
+}
+function xyzToLms(xyz) {
+  return mv3(M_HPE, xyz).map(v => Math.max(v, 1e-12));
+}
+function lmsToXyz(lms) {
+  return mv3(M_HPE_INV, lms);
+}
+function lmsToSimplex(lms) {
+  const w = GAMMAS.map((g, i) => g * Math.max(lms[i], 1e-12));
+  const s = w[0] + w[1] + w[2];
+  return w.map(v => v / s);
+}
+const XYZ_D65 = [0.95047, 1.0, 1.08883];
+function piToRgbExact(pi, targetY) {
+  const lmsR = [pi[0] / GAMMAS[0], pi[1] / GAMMAS[1], pi[2] / GAMMAS[2]];
+  const s = lmsR[0] + lmsR[1] + lmsR[2];
+  const lmsN = lmsR.map(v => v / s);
+  const xyzN = lmsToXyz(lmsN);
+  if (Math.abs(xyzN[1]) < 1e-12) return [0.5, 0.5, 0.5];
+  const scale = targetY / xyzN[1];
+  return xyzToRgb(xyzN.map(v => v * scale));
+}
+function luminanceLinear(rgbLin) {
+  return 0.2126729 * rgbLin[0] + 0.7151522 * rgbLin[1] + 0.0721750 * rgbLin[2];
+}
+
 const I18N = {
   fr: {
     headerTitle:"Module 06 - Séparation de dominante colorée",
@@ -161,7 +244,7 @@ const I18N = {
     classicalTitle:"Classical",
     scsTitle:"SCS",
     classicalNote:"La dominante recule, mais les relations colorées internes s’aplatissent plus vite.",
-    scsNote:"La dominante recule en essayant de préserver la cohérence chromatique locale.",
+    scsNote:"La branche SCS déplace la direction chromatique π vers la distribution uniforme U sur le simplexe, en laissant la luminance linéaire Y inchangée. La branche classique soustrait la moyenne RVB canal par canal, ce qui altère aussi la luminance.",
     original:"Original",
     theory:"Une dominante colorée n’est pas seulement une erreur de balance des blancs : elle modifie aussi l’économie interne des couleurs de l’image. Une correction classique agit souvent de façon globale, ce qui neutralise la dominante mais peut aussi aplatir les relations chromatiques locales.<br><br>La version SCS cherche au contraire à séparer la correction globale de la structure chromatique locale. Le but n’est pas seulement de rendre l’image plus neutre, mais de préserver sa cohérence colorée interne."
   },
@@ -180,7 +263,7 @@ const I18N = {
     classicalTitle:"Classical",
     scsTitle:"SCS",
     classicalNote:"The cast is reduced, but internal color relationships flatten faster.",
-    scsNote:"The cast is reduced while trying to preserve local chromatic coherence.",
+    scsNote:"SCS branch moves the chromatic direction π toward the neutral uniform distribution on the simplex, leaving linear luminance Y unchanged. The classical branch subtracts the RGB average cast per channel, which also alters luminance.",
     original:"Original",
     theory:"A color cast is not only a white-balance error: it also changes the internal color economy of the image. A classical correction often acts globally, which neutralizes the cast but may also flatten local chromatic relationships.<br><br>The SCS version instead tries to separate the global correction from the local chromatic structure. The goal is not only to make the image more neutral, but to preserve its internal color coherence."
   }
@@ -344,12 +427,25 @@ function render(amount){
   const scsImg = scsCtx.createImageData(W,H);
   const cd = classicalImg.data, sd = scsImg.data;
 
-  // estimate global cast from average rgb
+  // --- Classical cast estimate: mean RGB in [0,1], cast = mean - gray ---
   let avgR=0, avgG=0, avgB=0, n=origPixels.length/4;
   for(let i=0;i<origPixels.length;i+=4){ avgR += origPixels[i]/255; avgG += origPixels[i+1]/255; avgB += origPixels[i+2]/255; }
   avgR/=n; avgG/=n; avgB/=n;
   const gray = (avgR + avgG + avgB) / 3;
   const castVec = [avgR - gray, avgG - gray, avgB - gray];
+
+  // --- SCS cast estimate: mean pi in gamma-weighted simplex space ---
+  // pi lives on the 2-simplex (pi3 + pi5 + pi7 = 1); the cast is the image-wide
+  // deviation of the mean pi from the neutral uniform U = (1/3, 1/3, 1/3).
+  let piSum0 = 0, piSum1 = 0, piSum2 = 0;
+  for(let i=0;i<origPixels.length;i+=4){
+    const r = origPixels[i]/255, g = origPixels[i+1]/255, b = origPixels[i+2]/255;
+    const pi = lmsToSimplex(xyzToLms(rgbToXyz([r, g, b])));
+    piSum0 += pi[0]; piSum1 += pi[1]; piSum2 += pi[2];
+  }
+  const piMean = [piSum0 / n, piSum1 / n, piSum2 / n];
+  const U = 1/3;
+  const castVecPi = [piMean[0] - U, piMean[1] - U, piMean[2] - U];
 
   for(let i=0;i<origPixels.length;i+=4){
     const r = origPixels[i]/255, g = origPixels[i+1]/255, b = origPixels[i+2]/255, a = origPixels[i+3];
@@ -362,18 +458,37 @@ function render(amount){
       skinMask = clamp01(1 - Math.max(0, dHue - 18) / 22) * clamp01((s - 0.08) / 0.22);
     }
     const neutralMask = protectNeutrals ? clamp01((0.18 - s) / 0.18) : 0;
+    const protect = Math.max(skinMask, neutralMask);
+    const localAmount = amount * (1 - 0.75 * protect);
 
-    // Classical: stronger global per-channel neutralization
+    // --- Classical branch: plain per-channel RGB subtraction.
+    // This is the naive correction; it neutralizes the cast but also shifts luminance. ---
     const cr = clamp01(r - castVec[0] * amount);
     const cg = clamp01(g - castVec[1] * amount);
     const cb = clamp01(b - castVec[2] * amount);
 
-    // SCS-inspired: softer global neutralization, damped on sensitive regions
-    const protect = Math.max(skinMask, neutralMask);
-    const localAmount = amount * (1 - 0.75 * protect);
-    const sr = clamp01(r - castVec[0] * localAmount * 0.82);
-    const sg = clamp01(g - castVec[1] * localAmount * 0.82);
-    const sb = clamp01(b - castVec[2] * localAmount * 0.82);
+    // --- SCS branch: shift pi toward U in simplex space, preserve linear luminance Y. ---
+    const rgbLin = [srgbToLinear(r), srgbToLinear(g), srgbToLinear(b)];
+    const xyz = mv3(M_SRGB_XYZ, rgbLin);
+    const lms = xyzToLms(xyz);
+    const pi = lmsToSimplex(lms);
+    const Y = luminanceLinear(rgbLin); // preserve linear luminance
+
+    let piNew = [
+      pi[0] - localAmount * castVecPi[0],
+      pi[1] - localAmount * castVecPi[1],
+      pi[2] - localAmount * castVecPi[2],
+    ];
+    // Clamp to simplex boundary, then renormalize to sum=1
+    piNew = piNew.map(v => Math.max(v, 1e-6));
+    const pSum = piNew[0] + piNew[1] + piNew[2];
+    piNew = piNew.map(v => v / pSum);
+
+    // Reconstruct (pi_new, Y) -> linear RGB -> sRGB
+    const linNew = piToRgbExact(piNew, Y); // this returns sRGB already (xyzToRgb applies gamma)
+    const sr = clamp01(linNew[0]);
+    const sg = clamp01(linNew[1]);
+    const sb = clamp01(linNew[2]);
 
     cd[i] = Math.round(cr*255);
     cd[i+1] = Math.round(cg*255);
